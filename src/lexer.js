@@ -1,4 +1,4 @@
-import { Token, TokenType } from './token.js'
+import { Token, TokenType, lookupIdent } from './token.js'
 
 export class Lexer {
   input = ''
@@ -12,7 +12,9 @@ export class Lexer {
   }
 
   nextToken() {
-    let token = null
+    let token = new Token(null, null)
+
+    this.skipWhitespace()
 
     switch (this.ch) {
       case '=':
@@ -43,13 +45,29 @@ export class Lexer {
         token = new Token(TokenType.EOF, '')
         break
       default:
-        token = new Token(TokenType.ILLEGAL, this.ch)
+        if (this.isLetter(this.ch)) {
+          token.literal = this.readIdentifier()
+          token.type = lookupIdent(token.literal)
+          return token
+        } else if (this.isDigit(this.ch)) {
+          token.literal = this.readNumber()
+          token.type = TokenType.INT
+          return token
+        } else {
+          token = new Token(TokenType.ILLEGAL, this.ch)
+        }
         break
     }
 
     this.readChar()
 
     return token
+  }
+
+  skipWhitespace() {
+    while (this.ch === ' ' || this.ch === '\t' || this.ch === '\n' || this.ch === '\r') {
+      this.readChar()
+    }
   }
 
   readChar() {
@@ -61,5 +79,29 @@ export class Lexer {
 
     this.position = this.nextPosition
     this.nextPosition += 1
+  }
+
+  isLetter(ch) {
+    return /[a-z]/i.test(ch) || ch === '_'
+  }
+
+  isDigit(ch) {
+    return !isNaN(parseInt(ch)) && ch !== ''
+  }
+
+  readIdentifier() {
+    let start = this.position
+    while (this.isLetter(this.ch)) {
+      this.readChar()
+    }
+    return this.input.substring(start, this.position)
+  }
+
+  readNumber() {
+    let start = this.position
+    while (this.isDigit(this.ch)) {
+      this.readChar()
+    }
+    return this.input.substring(start, this.position)
   }
 }

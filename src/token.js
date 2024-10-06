@@ -20,12 +20,25 @@ export const TokenType = {
   LET: 'LET',
 }
 
+const keywordIdentMap = {
+  fn: 'FUNCTION',
+  let: 'LET',
+}
+
 export class Token {
   type = ''
   literal = ''
 
-  constructor (type, literal) {
+  constructor(type, literal) {
     this.type = type
     this.literal = literal
   }
+}
+
+export const lookupIdent = (ident) => {
+  if (keywordIdentMap[ident]) {
+    return keywordIdentMap[ident]
+  }
+
+  return 'IDENT'
 }
