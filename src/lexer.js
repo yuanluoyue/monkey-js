@@ -7,7 +7,7 @@ export class Lexer {
   ch = ''
 
   constructor(input) {
-    this.input = input
+    this.input = input + ' '
     this.readChar()
   }
 
