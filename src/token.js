@@ -7,6 +7,16 @@ export const TokenType = {
 
   ASSIGN: '=',
   PLUS: '+',
+  MINUS: '-',
+  BANG: '!',
+  ASTERISK: '*',
+  SLASH: '/',
+
+  LT: '<',
+  GT: '>',
+
+  EQ: '==',
+  NOT_EQ: '!=',
 
   COMMA: ',',
   SEMICOLON: ';',
@@ -18,11 +28,21 @@ export const TokenType = {
 
   FUNCTION: 'FUNCTION',
   LET: 'LET',
+  TRUE: 'TRUE',
+  FALSE: 'FALSE',
+  IF: 'IF',
+  ELSE: 'ELSE',
+  RETURN: 'RETURN',
 }
 
 const keywordIdentMap = {
   fn: 'FUNCTION',
   let: 'LET',
+  true: 'TRUE',
+  false: 'FALSE',
+  if: 'IF',
+  else: 'ELSE',
+  return: 'RETURN',
 }
 
 export class Token {
