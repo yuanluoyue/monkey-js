@@ -104,7 +104,7 @@ export class Lexer {
 
   readChar() {
     if (this.position >= this.input.length) {
-      this.ch = 0
+      this.ch = undefined
     } else {
       this.ch = this.input[this.nextPosition]
     }
