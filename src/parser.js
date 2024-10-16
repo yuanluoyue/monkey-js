@@ -1,4 +1,4 @@
-import { Program, LetStatement, Identifier } from './ast.js'
+import { Program, LetStatement, Identifier, ReturnStatement } from './ast.js'
 import { TokenType } from './token.js'
 
 export class Parser {
@@ -36,6 +36,8 @@ export class Parser {
     switch (this.curToken.type) {
       case TokenType.LET:
         return this.parseLetStatement()
+      case TokenType.RETURN:
+        return this.parseReturnStatement()
       default:
         return null
     }
@@ -59,6 +61,14 @@ export class Parser {
       this.nextToken()
     }
 
+    return statement
+  }
+
+  parseReturnStatement() {
+    const statement = new ReturnStatement(this.curToken)
+    while (!this.curTokenIs(TokenType.SEMICOLON)) {
+      this.nextToken()
+    }
     return statement
   }
 

@@ -64,3 +64,17 @@ export class Identifier extends Node {
     return this.token.literal
   }
 }
+
+export class ReturnStatement extends Node {
+  constructor(token, returnValue) {
+    super()
+    this.token = token
+    this.returnValue = returnValue
+  }
+
+  statementNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+}

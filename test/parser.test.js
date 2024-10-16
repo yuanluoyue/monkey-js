@@ -1,6 +1,6 @@
 import { Parser } from '../src/parser.js'
 import { Lexer } from '../src/lexer.js'
-import { LetStatement } from '../src/ast.js'
+import { LetStatement, ReturnStatement } from '../src/ast.js'
 
 const checkParserErrors = (parser) => {
   const errors = parser.getErrors()
@@ -73,8 +73,41 @@ const testLetStatements = () => {
   }
 }
 
+const testReturnStatements = () => {
+  const input = `
+    return 5;
+    return 10;
+    return 993 322;
+    `
+
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  if (program.statements.length !== 3) {
+    throw new Error(
+      `program.Statements does not contain 3 statements. got=${program.statements.length}`
+    )
+  }
+
+  for (const statement of program.statements) {
+    if (!statement instanceof ReturnStatement) {
+      returnStmt = stmt
+    }
+
+    if (statement.tokenLiteral() !== 'return') {
+      throw new Error(
+        `returnStmt.TokenLiteral not 'return', got ${statement.tokenLiteral()}`
+      )
+    }
+  }
+}
+
 const main = () => {
   testLetStatements()
+  testReturnStatements()
 }
 
 main()
