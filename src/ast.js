@@ -10,6 +10,10 @@ class Node {
   tokenLiteral() {
     throw new Error('TokenLiteral method must be implemented by subclasses.')
   }
+
+  getString() {
+    throw new Error('String method must be implemented by subclasses.')
+  }
 }
 
 class Statement extends Node {
@@ -34,6 +38,14 @@ export class Program extends Node {
       return ''
     }
   }
+
+  getString() {
+    let out = ''
+    for (const s of this.statements) {
+      out += s.getString()
+    }
+    return out
+  }
 }
 
 export class LetStatement extends Node {
@@ -49,6 +61,18 @@ export class LetStatement extends Node {
   tokenLiteral() {
     return this.token.literal
   }
+
+  getString() {
+    let out = ''
+    out += this.token.literal + ' '
+    out += this.name.getString()
+    out += ' = '
+    if (this.value !== null) {
+      out += this.value.getString()
+    }
+    out += ';'
+    return out
+  }
 }
 
 export class Identifier extends Node {
@@ -63,6 +87,10 @@ export class Identifier extends Node {
   tokenLiteral() {
     return this.token.literal
   }
+
+  getString() {
+    return this.value
+  }
 }
 
 export class ReturnStatement extends Node {
@@ -76,5 +104,36 @@ export class ReturnStatement extends Node {
 
   tokenLiteral() {
     return this.token.literal
+  }
+
+  getString() {
+    let out = ''
+    out += this.token.literal + ' '
+    if (this.returnValue !== null) {
+      out += this.returnValue.getString()
+    }
+    out += ';'
+    return out
+  }
+}
+
+export class ExpressionStatement extends Node {
+  constructor(token, expression) {
+    super()
+    this.token = token
+    this.expression = expression
+  }
+
+  statementNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    if (this.expression !== null) {
+      return this.expression.getString()
+    }
+    return ''
   }
 }

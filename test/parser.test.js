@@ -1,6 +1,12 @@
 import { Parser } from '../src/parser.js'
 import { Lexer } from '../src/lexer.js'
-import { LetStatement, ReturnStatement } from '../src/ast.js'
+import {
+  LetStatement,
+  ReturnStatement,
+  Identifier,
+  ExpressionStatement,
+} from '../src/ast.js'
+import { TokenType } from '../src/token.js'
 
 const checkParserErrors = (parser) => {
   const errors = parser.getErrors()
@@ -93,10 +99,6 @@ const testReturnStatements = () => {
   }
 
   for (const statement of program.statements) {
-    if (!statement instanceof ReturnStatement) {
-      returnStmt = stmt
-    }
-
     if (statement.tokenLiteral() !== 'return') {
       throw new Error(
         `returnStmt.TokenLiteral not 'return', got ${statement.tokenLiteral()}`
@@ -105,9 +107,75 @@ const testReturnStatements = () => {
   }
 }
 
+const testString = () => {
+  const input = `let myVar = anotherVar;`
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  program.statements = [
+    new LetStatement(
+      { type: TokenType.LET, literal: 'let' },
+      new Identifier({ type: TokenType.IDENT, literal: 'myVar' }, 'myVar'),
+      new Identifier(
+        { type: TokenType.IDENT, literal: 'anotherVar' },
+        'anotherVar'
+      )
+    ),
+  ]
+
+  const expectedString = 'let myVar = anotherVar;'
+
+  if (program.getString() !== expectedString) {
+    throw new Error(`program.getString() wrong. got=${program.getString()}`)
+  }
+}
+
+const testIdentifierExpression = () => {
+  const input = `foobar;`
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  if (program.statements.length !== 1) {
+    throw new Error(
+      `program has not enough statements. got=${program.statements.length}`
+    )
+  }
+
+  let statement
+  if (program.statements[0] instanceof ExpressionStatement) {
+    statement = program.statements[0]
+  } else {
+    throw new Error(
+      `program.Statements[0] is not ExpressionStatement. got=${typeof program
+        .statements[0]}`
+    )
+  }
+
+  let ident
+  if (statement.expression instanceof Identifier) {
+    ident = statement.expression
+  } else {
+    throw new Error(`exp not Identifier. got=${typeof statement.expression}`)
+  }
+  if (ident.value !== 'foobar') {
+    throw new Error(`ident.Value not "foobar". got=${ident.value}`)
+  }
+  if (ident.tokenLiteral() !== 'foobar') {
+    throw new Error(
+      `ident.TokenLiteral not "foobar". got=${ident.tokenLiteral()}`
+    )
+  }
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
+  testString()
+  testIdentifierExpression()
 }
 
 main()

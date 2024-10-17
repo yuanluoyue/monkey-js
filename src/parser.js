@@ -1,14 +1,34 @@
-import { Program, LetStatement, Identifier, ReturnStatement } from './ast.js'
+import {
+  Program,
+  LetStatement,
+  Identifier,
+  ReturnStatement,
+  ExpressionStatement,
+} from './ast.js'
 import { TokenType } from './token.js'
+
+const _ = 0
+const LOWEST = 1
+const EQUALS = 2
+const LESSGREATER = 3
+const SUM = 4
+const PRODUCT = 5
+const PREFIX = 6
+const CALL = 7
 
 export class Parser {
   lexer = null
   curToken = null
   peekToken = null
+  prefixParseFns = {}
+  infixParseFns = {}
   errors = []
 
   constructor(lexerInstance) {
     this.lexer = lexerInstance
+
+    this.registerPrefix(TokenType.IDENT, this.parseIdentifier.bind(this))
+
     this.nextToken()
     this.nextToken()
   }
@@ -39,7 +59,7 @@ export class Parser {
       case TokenType.RETURN:
         return this.parseReturnStatement()
       default:
-        return null
+        return this.parseExpressionStatement()
     }
   }
 
@@ -72,6 +92,28 @@ export class Parser {
     return statement
   }
 
+  parseExpressionStatement() {
+    const statement = new ExpressionStatement(this.curToken)
+    statement.expression = this.parseExpression(LOWEST)
+    if (this.peekTokenIs(TokenType.SEMICOLON)) {
+      this.nextToken()
+    }
+    return statement
+  }
+
+  parseIdentifier() {
+    return new Identifier(this.curToken, this.curToken.literal)
+  }
+
+  parseExpression(precedence) {
+    const prefixFn = this.prefixParseFns[this.curToken.type]
+    if (!prefixFn) {
+      return null
+    }
+    const leftExp = prefixFn()
+    return leftExp
+  }
+
   curTokenIs(tokenType) {
     return this.curToken.type === tokenType
   }
@@ -88,6 +130,14 @@ export class Parser {
       this.peekError(tokenType)
       return false
     }
+  }
+
+  registerPrefix(tokenType, fn) {
+    this.prefixParseFns[tokenType] = fn
+  }
+
+  registerInfix(tokenType, fn) {
+    this.infixParseFns[tokenType] = fn
   }
 
   getErrors() {
