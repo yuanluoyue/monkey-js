@@ -137,3 +137,21 @@ export class ExpressionStatement extends Node {
     return ''
   }
 }
+
+export class IntegerLiteral extends Node {
+  constructor(token) {
+    super()
+    this.token = token
+    this.value = parseInt(token.literal)
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    return this.token.literal
+  }
+}

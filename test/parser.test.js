@@ -5,6 +5,7 @@ import {
   ReturnStatement,
   Identifier,
   ExpressionStatement,
+  IntegerLiteral,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
 
@@ -171,11 +172,53 @@ const testIdentifierExpression = () => {
   }
 }
 
+const testIntegerLiteralExpression = () => {
+  const input = '5;'
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  if (program.statements.length !== 1) {
+    throw new Error(
+      `program has not enough statements. got=${program.statements.length}`
+    )
+  }
+  let statement
+  if (program.statements[0] instanceof ExpressionStatement) {
+    statement = program.statements[0]
+  } else {
+    throw new Error(
+      `program.Statements[0] is not ExpressionStatement. got=${typeof program
+        .statements[0]}`
+    )
+  }
+
+  let literal
+  if (statement.expression instanceof IntegerLiteral) {
+    literal = statement.expression
+  } else {
+    throw new Error(
+      `exp not IntegerLiteral. got=${typeof statement.expression}`
+    )
+  }
+  if (literal.value !== 5) {
+    throw new Error(`literal.Value not 5. got=${literal.value}`)
+  }
+  if (literal.tokenLiteral() !== '5') {
+    throw new Error(
+      `literal.TokenLiteral not "5". got=${literal.tokenLiteral()}`
+    )
+  }
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
   testString()
   testIdentifierExpression()
+  testIntegerLiteralExpression()
 }
 
 main()

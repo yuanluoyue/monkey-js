@@ -4,6 +4,7 @@ import {
   Identifier,
   ReturnStatement,
   ExpressionStatement,
+  IntegerLiteral,
 } from './ast.js'
 import { TokenType } from './token.js'
 
@@ -28,6 +29,7 @@ export class Parser {
     this.lexer = lexerInstance
 
     this.registerPrefix(TokenType.IDENT, this.parseIdentifier.bind(this))
+    this.registerPrefix(TokenType.INT, this.parseIntegerLiteral.bind(this))
 
     this.nextToken()
     this.nextToken()
@@ -103,6 +105,20 @@ export class Parser {
 
   parseIdentifier() {
     return new Identifier(this.curToken, this.curToken.literal)
+  }
+
+  parseIntegerLiteral() {
+    const literal = new IntegerLiteral(this.curToken)
+    const value = parseInt(this.curToken.literal)
+
+    if (isNaN(value)) {
+      this.errors.push(`could not parse ${this.curToken.literal} as integer`)
+      return null
+    }
+
+    literal.value = value
+
+    return literal
   }
 
   parseExpression(precedence) {
