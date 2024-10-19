@@ -179,3 +179,29 @@ export class PrefixExpression extends Node {
     return out
   }
 }
+
+export class InfixExpression extends Node {
+  constructor(token, left, operator, right) {
+    super()
+    this.token = token
+    this.left = left
+    this.operator = operator
+    this.right = right
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    let out = ''
+    out += '('
+    out += this.left.getString()
+    out += ` ${this.operator} `
+    out += this.right.getString()
+    out += ')'
+    return out
+  }
+}

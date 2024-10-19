@@ -7,6 +7,7 @@ import {
   ExpressionStatement,
   IntegerLiteral,
   PrefixExpression,
+  InfixExpression,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
 
@@ -282,6 +283,102 @@ const testParsingPrefixExpressions = () => {
   }
 }
 
+const testParsingInfixExpressions = () => {
+  const infixTests = [
+    { input: '5 + 5;', leftValue: 5, operator: '+', rightValue: 5 },
+    { input: '5 - 5;', leftValue: 5, operator: '-', rightValue: 5 },
+    { input: '5 * 5;', leftValue: 5, operator: '*', rightValue: 5 },
+    { input: '5 / 5;', leftValue: 5, operator: '/', rightValue: 5 },
+    { input: '5 > 5;', leftValue: 5, operator: '>', rightValue: 5 },
+    { input: '5 < 5;', leftValue: 5, operator: '<', rightValue: 5 },
+    { input: '5 == 5;', leftValue: 5, operator: '==', rightValue: 5 },
+    { input: '5!= 5;', leftValue: 5, operator: '!=', rightValue: 5 },
+  ]
+
+  for (const testCase of infixTests) {
+    const lexer = new Lexer(testCase.input)
+    const parser = new Parser(lexer)
+    const program = parser.parseProgram()
+
+    checkParserErrors(parser)
+
+    if (program.statements.length !== 1) {
+      throw new Error(
+        `program.Statements does not contain 1 statements. got=${program.statements.length}`
+      )
+    }
+
+    let statement
+    if (program.statements[0] instanceof ExpressionStatement) {
+      statement = program.statements[0]
+    } else {
+      throw new Error(
+        `program.Statements[0] is not ExpressionStatement. got=${typeof program
+          .statements[0]}`
+      )
+    }
+
+    let expression
+    if (statement.expression instanceof InfixExpression) {
+      expression = statement.expression
+    } else {
+      throw new Error(
+        `exp is not InfixExpression. got=${typeof statement.expression}`
+      )
+    }
+
+    if (!testIntegerLiteral(expression.left, testCase.leftValue)) {
+      return
+    }
+
+    if (expression.operator !== testCase.operator) {
+      throw new Error(
+        `exp.Operator is not '${testCase.operator}'. got=${expression.operator}`
+      )
+    }
+
+    if (!testIntegerLiteral(expression.right, testCase.rightValue)) {
+      return
+    }
+  }
+}
+
+const testOperatorPrecedenceParsing = () => {
+  const tests = [
+    { input: '-a * b', expected: '((-a) * b)' },
+    { input: '!-a', expected: '(!(-a))' },
+    { input: 'a + b + c', expected: '((a + b) + c)' },
+    { input: 'a + b - c', expected: '((a + b) - c)' },
+    { input: 'a * b * c', expected: '((a * b) * c)' },
+    { input: 'a * b / c', expected: '((a * b) / c)' },
+    { input: 'a + b / c', expected: '(a + (b / c))' },
+    {
+      input: 'a + b * c + d / e - f',
+      expected: '(((a + (b * c)) + (d / e)) - f)',
+    },
+    { input: '3 + 4; -5 * 5', expected: '(3 + 4)((-5) * 5)' },
+    { input: '5 > 4 == 3 < 4', expected: '((5 > 4) == (3 < 4))' },
+    { input: '5 < 4 != 3 > 4', expected: '((5 < 4) != (3 > 4))' },
+    {
+      input: '3 + 4 * 5 == 3 * 1 + 4 * 5',
+      expected: '((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))',
+    },
+  ]
+
+  for (const testCase of tests) {
+    const lexer = new Lexer(testCase.input)
+    const parser = new Parser(lexer)
+    const program = parser.parseProgram()
+
+    checkParserErrors(parser)
+
+    const actual = program.getString()
+    if (actual !== testCase.expected) {
+      throw new Error(`expected=${testCase.expected}, got=${actual}`)
+    }
+  }
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
@@ -289,6 +386,8 @@ const main = () => {
   testIdentifierExpression()
   testIntegerLiteralExpression()
   testParsingPrefixExpressions()
+  testParsingInfixExpressions()
+  testOperatorPrecedenceParsing()
 }
 
 main()
