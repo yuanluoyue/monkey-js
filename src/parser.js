@@ -5,6 +5,7 @@ import {
   ReturnStatement,
   ExpressionStatement,
   IntegerLiteral,
+  PrefixExpression,
 } from './ast.js'
 import { TokenType } from './token.js'
 
@@ -30,6 +31,8 @@ export class Parser {
 
     this.registerPrefix(TokenType.IDENT, this.parseIdentifier.bind(this))
     this.registerPrefix(TokenType.INT, this.parseIntegerLiteral.bind(this))
+    this.registerPrefix(TokenType.BANG, this.parsePrefixExpression.bind(this))
+    this.registerPrefix(TokenType.MINUS, this.parsePrefixExpression.bind(this))
 
     this.nextToken()
     this.nextToken()
@@ -121,9 +124,20 @@ export class Parser {
     return literal
   }
 
+  parsePrefixExpression() {
+    const expression = new PrefixExpression(
+      this.curToken,
+      this.curToken.literal
+    )
+    this.nextToken()
+    expression.right = this.parseExpression(PREFIX)
+    return expression
+  }
+
   parseExpression(precedence) {
     const prefixFn = this.prefixParseFns[this.curToken.type]
     if (!prefixFn) {
+      this.noPrefixParseFnError(this.curToken.type)
       return null
     }
     const leftExp = prefixFn()
@@ -162,6 +176,11 @@ export class Parser {
 
   peekError(tokenType) {
     const msg = `expected next token to be ${tokenType}, got ${this.peekToken.type} instead`
+    this.errors.push(msg)
+  }
+
+  noPrefixParseFnError(tokenType) {
+    const msg = `no prefix parse function for ${tokenType} found`
     this.errors.push(msg)
   }
 }

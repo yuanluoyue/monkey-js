@@ -6,6 +6,7 @@ import {
   Identifier,
   ExpressionStatement,
   IntegerLiteral,
+  PrefixExpression,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
 
@@ -213,12 +214,81 @@ const testIntegerLiteralExpression = () => {
   }
 }
 
+const testIntegerLiteral = (literal, value) => {
+  if (!literal instanceof IntegerLiteral) {
+    throw new Error(`literal not IntegerLiteral. got=${typeof il}`)
+  }
+
+  if (literal.value !== value) {
+    throw new Error(`integ.Value not ${value}. got=${literal.value}`)
+  }
+
+  if (literal.tokenLiteral() !== value.toString()) {
+    throw new Error(
+      `integ.TokenLiteral not ${value}. got=${literal.tokenLiteral()}`
+    )
+  }
+
+  return true
+}
+
+const testParsingPrefixExpressions = () => {
+  const prefixTests = [
+    { input: '!5;', operator: '!', integerValue: 5 },
+    { input: '-15;', operator: '-', integerValue: 15 },
+  ]
+
+  for (const testCase of prefixTests) {
+    const lexer = new Lexer(testCase.input)
+    const parser = new Parser(lexer)
+    const program = parser.parseProgram()
+
+    checkParserErrors(parser)
+
+    if (program.statements.length !== 1) {
+      throw new Error(
+        `program.Statements does not contain 1 statements. got=${program.statements.length}`
+      )
+    }
+
+    let statement
+    if (program.statements[0] instanceof ExpressionStatement) {
+      statement = program.statements[0]
+    } else {
+      throw new Error(
+        `program.Statements[0] is not ExpressionStatement. got=${typeof program
+          .statements[0]}`
+      )
+    }
+
+    let expression
+    if (statement.expression instanceof PrefixExpression) {
+      expression = statement.expression
+    } else {
+      throw new Error(
+        `stmt is not PrefixExpression. got=${typeof statement.expression}`
+      )
+    }
+
+    if (expression.operator !== testCase.operator) {
+      throw new Error(
+        `exp.Operator is not '${testCase.operator}'. got=${expression.operator}`
+      )
+    }
+
+    if (!testIntegerLiteral(expression.right, testCase.integerValue)) {
+      return
+    }
+  }
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
   testString()
   testIdentifierExpression()
   testIntegerLiteralExpression()
+  testParsingPrefixExpressions()
 }
 
 main()

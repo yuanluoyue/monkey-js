@@ -155,3 +155,27 @@ export class IntegerLiteral extends Node {
     return this.token.literal
   }
 }
+
+export class PrefixExpression extends Node {
+  constructor(token, operator, right) {
+    super()
+    this.token = token
+    this.operator = operator
+    this.right = right
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    let out = ''
+    out += '('
+    out += this.operator
+    out += this.right.getString()
+    out += ')'
+    return out
+  }
+}
