@@ -11,7 +11,12 @@ import {
   BooleanLiteral,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
-import { checkParserErrors } from './utils.js'
+import {
+  checkParserErrors,
+  testInfixExpression,
+  testIntegerLiteral,
+  testBooleanLiteral,
+} from './utils.js'
 
 const testLetStatement = (statement, name) => {
   if (statement.tokenLiteral() !== 'let') {
@@ -207,108 +212,6 @@ const testIntegerLiteralExpression = () => {
   }
 }
 
-const testIntegerLiteral = (literal, value) => {
-  if (!literal instanceof IntegerLiteral) {
-    throw new Error(`literal not IntegerLiteral. got=${typeof il}`)
-  }
-
-  if (literal.value !== value) {
-    throw new Error(`integ.Value not ${value}. got=${literal.value}`)
-  }
-
-  if (literal.tokenLiteral() !== value.toString()) {
-    throw new Error(
-      `integ.TokenLiteral not ${value}. got=${literal.tokenLiteral()}`
-    )
-  }
-
-  return true
-}
-
-const testIdentifier = (expression, value) => {
-  let identifier
-  if (expression instanceof Identifier) {
-    identifier = expression
-  } else {
-    throw new Error(`exp not Identifier. got=${typeof expression}`)
-  }
-
-  if (identifier.value !== value) {
-    throw new Error(`ident.Value not ${value}. got=${identifier.value}`)
-  }
-
-  if (identifier.tokenLiteral() !== value) {
-    throw new Error(
-      `ident.TokenLiteral not ${value}. got=${identifier.tokenLiteral()}`
-    )
-  }
-
-  return true
-}
-
-const testBooleanLiteral = (expression, value) => {
-  let booleanExpression
-  if (expression instanceof BooleanLiteral) {
-    booleanExpression = expression
-  } else {
-    throw new Error(`exp is not Boolean. got=${typeof expression}`)
-  }
-
-  if (booleanExpression.value !== value) {
-    throw new Error(
-      `boolean.Value not ${value}. got=${booleanExpression.value}`
-    )
-  }
-
-  if (booleanExpression.tokenLiteral() !== (value ? 'true' : 'false')) {
-    throw new Error(
-      `boolean.TokenLiteral not ${
-        value ? 'true' : 'false'
-      }. got=${booleanExpression.tokenLiteral()}`
-    )
-  }
-
-  return true
-}
-
-const testLiteralExpression = (expression, expected) => {
-  switch (typeof expected) {
-    case 'number':
-      return testIntegerLiteral(expression, expected)
-    case 'string':
-      return testIdentifier(expression, expected)
-    case 'boolean':
-      return testBooleanLiteral(expression, expected)
-    default:
-      throw new Error(`type of exp not handled. got=${typeof expression}`)
-  }
-}
-
-const testInfixExpression = (expression, left, operator, right) => {
-  let operatorExpression
-  if (expression instanceof InfixExpression) {
-    operatorExpression = expression
-  } else {
-    throw new Error(`exp is not InfixExpression. got=${typeof expression}`)
-  }
-
-  if (!testLiteralExpression(operatorExpression.left, left)) {
-    return false
-  }
-
-  if (operatorExpression.operator !== operator) {
-    throw new Error(
-      `exp.Operator is not '${operator}'. got=${operatorExpression.operator}`
-    )
-  }
-
-  if (!testLiteralExpression(operatorExpression.right, right)) {
-    return false
-  }
-
-  return true
-}
-
 const testParsingPrefixExpressions = () => {
   const prefixTests = [
     { input: '!5;', operator: '!', integerValue: 5 },
@@ -422,29 +325,6 @@ const testParsingInfixExpressions = () => {
       expression.operator,
       testCase.rightValue
     )
-
-    // let expression
-    // if (statement.expression instanceof InfixExpression) {
-    //   expression = statement.expression
-    // } else {
-    //   throw new Error(
-    //     `exp is not InfixExpression. got=${typeof statement.expression}`
-    //   )
-    // }
-
-    // if (!testIntegerLiteral(expression.left, testCase.leftValue)) {
-    //   return
-    // }
-
-    // if (expression.operator !== testCase.operator) {
-    //   throw new Error(
-    //     `exp.Operator is not '${testCase.operator}'. got=${expression.operator}`
-    //   )
-    // }
-
-    // if (!testIntegerLiteral(expression.right, testCase.rightValue)) {
-    //   return
-    // }
   }
 }
 
