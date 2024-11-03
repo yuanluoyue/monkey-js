@@ -7,6 +7,7 @@ import {
   IntegerLiteral,
   PrefixExpression,
   InfixExpression,
+  BooleanLiteral,
 } from './ast.js'
 import { TokenType } from './token.js'
 
@@ -43,6 +44,8 @@ export class Parser {
 
     this.registerPrefix(TokenType.IDENT, this.parseIdentifier.bind(this))
     this.registerPrefix(TokenType.INT, this.parseIntegerLiteral.bind(this))
+    this.registerPrefix(TokenType.TRUE, this.parseBooleanLiteral.bind(this))
+    this.registerPrefix(TokenType.FALSE, this.parseBooleanLiteral.bind(this))
     this.registerPrefix(TokenType.BANG, this.parsePrefixExpression.bind(this))
     this.registerPrefix(TokenType.MINUS, this.parsePrefixExpression.bind(this))
     this.registerInfix(TokenType.PLUS, this.parseInfixExpression.bind(this))
@@ -144,6 +147,10 @@ export class Parser {
     return literal
   }
 
+  parseBooleanLiteral() {
+    return new BooleanLiteral(this.curToken)
+  }
+
   parsePrefixExpression() {
     const expression = new PrefixExpression(
       this.curToken,
@@ -158,7 +165,7 @@ export class Parser {
     const expression = new InfixExpression(
       this.curToken,
       left,
-      this.curToken.literal,
+      this.curToken.literal
     )
     const precedence = this.curPrecedence()
     this.nextToken()

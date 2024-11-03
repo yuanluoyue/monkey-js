@@ -156,6 +156,24 @@ export class IntegerLiteral extends Node {
   }
 }
 
+export class BooleanLiteral extends Node {
+  constructor(token) {
+    super()
+    this.token = token
+    this.value = token.literal === 'true'
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    return this.token.literal
+  }
+}
+
 export class PrefixExpression extends Node {
   constructor(token, operator, right) {
     super()

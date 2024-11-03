@@ -8,18 +8,10 @@ import {
   IntegerLiteral,
   PrefixExpression,
   InfixExpression,
+  BooleanLiteral,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
-
-const checkParserErrors = (parser) => {
-  const errors = parser.getErrors()
-  if (errors.length === 0) {
-    return
-  }
-
-  errors.forEach((msg) => console.error(`parser error: ${msg}`))
-  throw new Error(`parser has ${errors.length} errors`)
-}
+import { checkParserErrors } from './utils.js'
 
 const testLetStatement = (statement, name) => {
   if (statement.tokenLiteral() !== 'let') {
@@ -233,10 +225,96 @@ const testIntegerLiteral = (literal, value) => {
   return true
 }
 
+const testIdentifier = (expression, value) => {
+  let identifier
+  if (expression instanceof Identifier) {
+    identifier = expression
+  } else {
+    throw new Error(`exp not Identifier. got=${typeof expression}`)
+  }
+
+  if (identifier.value !== value) {
+    throw new Error(`ident.Value not ${value}. got=${identifier.value}`)
+  }
+
+  if (identifier.tokenLiteral() !== value) {
+    throw new Error(
+      `ident.TokenLiteral not ${value}. got=${identifier.tokenLiteral()}`
+    )
+  }
+
+  return true
+}
+
+const testBooleanLiteral = (expression, value) => {
+  let booleanExpression
+  if (expression instanceof BooleanLiteral) {
+    booleanExpression = expression
+  } else {
+    throw new Error(`exp is not Boolean. got=${typeof expression}`)
+  }
+
+  if (booleanExpression.value !== value) {
+    throw new Error(
+      `boolean.Value not ${value}. got=${booleanExpression.value}`
+    )
+  }
+
+  if (booleanExpression.tokenLiteral() !== (value ? 'true' : 'false')) {
+    throw new Error(
+      `boolean.TokenLiteral not ${
+        value ? 'true' : 'false'
+      }. got=${booleanExpression.tokenLiteral()}`
+    )
+  }
+
+  return true
+}
+
+const testLiteralExpression = (expression, expected) => {
+  switch (typeof expected) {
+    case 'number':
+      return testIntegerLiteral(expression, expected)
+    case 'string':
+      return testIdentifier(expression, expected)
+    case 'boolean':
+      return testBooleanLiteral(expression, expected)
+    default:
+      throw new Error(`type of exp not handled. got=${typeof expression}`)
+  }
+}
+
+const testInfixExpression = (expression, left, operator, right) => {
+  let operatorExpression
+  if (expression instanceof InfixExpression) {
+    operatorExpression = expression
+  } else {
+    throw new Error(`exp is not InfixExpression. got=${typeof expression}`)
+  }
+
+  if (!testLiteralExpression(operatorExpression.left, left)) {
+    return false
+  }
+
+  if (operatorExpression.operator !== operator) {
+    throw new Error(
+      `exp.Operator is not '${operator}'. got=${operatorExpression.operator}`
+    )
+  }
+
+  if (!testLiteralExpression(operatorExpression.right, right)) {
+    return false
+  }
+
+  return true
+}
+
 const testParsingPrefixExpressions = () => {
   const prefixTests = [
     { input: '!5;', operator: '!', integerValue: 5 },
     { input: '-15;', operator: '-', integerValue: 15 },
+    { input: '!true;', operator: '!', integerValue: true },
+    { input: '!false;', operator: '!', integerValue: false },
   ]
 
   for (const testCase of prefixTests) {
@@ -292,7 +370,25 @@ const testParsingInfixExpressions = () => {
     { input: '5 > 5;', leftValue: 5, operator: '>', rightValue: 5 },
     { input: '5 < 5;', leftValue: 5, operator: '<', rightValue: 5 },
     { input: '5 == 5;', leftValue: 5, operator: '==', rightValue: 5 },
-    { input: '5!= 5;', leftValue: 5, operator: '!=', rightValue: 5 },
+    { input: '5 != 5;', leftValue: 5, operator: '!=', rightValue: 5 },
+    {
+      input: 'true == true;',
+      leftValue: true,
+      operator: '==',
+      rightValue: true,
+    },
+    {
+      input: 'true != false;',
+      leftValue: true,
+      operator: '!=',
+      rightValue: false,
+    },
+    {
+      input: 'false == false;',
+      leftValue: false,
+      operator: '==',
+      rightValue: false,
+    },
   ]
 
   for (const testCase of infixTests) {
@@ -318,28 +414,37 @@ const testParsingInfixExpressions = () => {
       )
     }
 
-    let expression
-    if (statement.expression instanceof InfixExpression) {
-      expression = statement.expression
-    } else {
-      throw new Error(
-        `exp is not InfixExpression. got=${typeof statement.expression}`
-      )
-    }
+    const expression = statement.expression
 
-    if (!testIntegerLiteral(expression.left, testCase.leftValue)) {
-      return
-    }
+    testInfixExpression(
+      expression,
+      testCase.leftValue,
+      expression.operator,
+      testCase.rightValue
+    )
 
-    if (expression.operator !== testCase.operator) {
-      throw new Error(
-        `exp.Operator is not '${testCase.operator}'. got=${expression.operator}`
-      )
-    }
+    // let expression
+    // if (statement.expression instanceof InfixExpression) {
+    //   expression = statement.expression
+    // } else {
+    //   throw new Error(
+    //     `exp is not InfixExpression. got=${typeof statement.expression}`
+    //   )
+    // }
 
-    if (!testIntegerLiteral(expression.right, testCase.rightValue)) {
-      return
-    }
+    // if (!testIntegerLiteral(expression.left, testCase.leftValue)) {
+    //   return
+    // }
+
+    // if (expression.operator !== testCase.operator) {
+    //   throw new Error(
+    //     `exp.Operator is not '${testCase.operator}'. got=${expression.operator}`
+    //   )
+    // }
+
+    // if (!testIntegerLiteral(expression.right, testCase.rightValue)) {
+    //   return
+    // }
   }
 }
 
@@ -363,6 +468,22 @@ const testOperatorPrecedenceParsing = () => {
       input: '3 + 4 * 5 == 3 * 1 + 4 * 5',
       expected: '((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))',
     },
+    {
+      input: 'true;',
+      expected: 'true',
+    },
+    {
+      input: 'false;',
+      expected: 'false',
+    },
+    {
+      input: '3 > 5 == false;',
+      expected: '((3 > 5) == false)',
+    },
+    {
+      input: '3 < 5 == true;',
+      expected: '((3 < 5) == true)',
+    },
   ]
 
   for (const testCase of tests) {
@@ -379,6 +500,42 @@ const testOperatorPrecedenceParsing = () => {
   }
 }
 
+const testBooleanExpression = () => {
+  const input = `true;`
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  if (program.statements.length !== 1) {
+    throw new Error(
+      `program.Statements does not contain 1 statements. got=${program.statements.length}`
+    )
+  }
+
+  let statement
+  if (program.statements[0] instanceof ExpressionStatement) {
+    statement = program.statements[0]
+  } else {
+    throw new Error(
+      `program.Statements[0] is not ExpressionStatement. got=${typeof program
+        .statements[0]}`
+    )
+  }
+
+  let expression
+  if (statement.expression instanceof BooleanLiteral) {
+    expression = statement.expression
+  } else {
+    throw new Error(`stmt is not Boolean. got=${typeof statement.expression}`)
+  }
+
+  if (!testBooleanLiteral(expression, true)) {
+    return
+  }
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
@@ -388,6 +545,7 @@ const main = () => {
   testParsingPrefixExpressions()
   testParsingInfixExpressions()
   testOperatorPrecedenceParsing()
+  testBooleanExpression()
 }
 
 main()
