@@ -138,6 +138,29 @@ export class ExpressionStatement extends Node {
   }
 }
 
+export class BlockStatement extends Node {
+  statements = []
+
+  constructor(token) {
+    super()
+    this.token = token
+  }
+
+  statementNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    let out = ''
+    for (const statement of this.statements) {
+      out += statement.getString()
+    }
+    return out
+  }
+}
+
 export class IntegerLiteral extends Node {
   constructor(token) {
     super()
@@ -220,6 +243,35 @@ export class InfixExpression extends Node {
     out += ` ${this.operator} `
     out += this.right.getString()
     out += ')'
+    return out
+  }
+}
+
+export class IfExpression extends Node {
+  constructor(token, condition, consequence, alternative) {
+    super()
+    this.token = token
+    this.condition = condition
+    this.consequence = consequence
+    this.alternative = alternative
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    let out = ''
+    out += 'if'
+    out += this.condition.getString()
+    out += ' '
+    out += this.consequence.getString()
+    if (this.alternative) {
+      out += 'else '
+      out += this.alternative.getString()
+    }
     return out
   }
 }

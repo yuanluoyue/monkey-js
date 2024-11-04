@@ -4,9 +4,11 @@ import {
   Identifier,
   ReturnStatement,
   ExpressionStatement,
+  BlockStatement,
   IntegerLiteral,
   PrefixExpression,
   InfixExpression,
+  IfExpression,
   BooleanLiteral,
 } from './ast.js'
 import { TokenType } from './token.js'
@@ -52,6 +54,7 @@ export class Parser {
       TokenType.LPAREN,
       this.parseGroupedExpression.bind(this)
     )
+    this.registerPrefix(TokenType.IF, this.parseIfExpression.bind(this))
 
     this.registerInfix(TokenType.PLUS, this.parseInfixExpression.bind(this))
     this.registerInfix(TokenType.MINUS, this.parseInfixExpression.bind(this))
@@ -134,6 +137,25 @@ export class Parser {
     return statement
   }
 
+  parseBlockStatement() {
+    const block = new BlockStatement(this.curToken)
+
+    this.nextToken()
+
+    while (
+      !this.curTokenIs(TokenType.RBRACE) &&
+      !this.curTokenIs(TokenType.EOF)
+    ) {
+      const statement = this.parseStatement()
+      if (statement) {
+        block.statements.push(statement)
+      }
+      this.nextToken()
+    }
+
+    return block
+  }
+
   parseIdentifier() {
     return new Identifier(this.curToken, this.curToken.literal)
   }
@@ -154,6 +176,41 @@ export class Parser {
 
   parseBooleanLiteral() {
     return new BooleanLiteral(this.curToken)
+  }
+
+  parseIfExpression() {
+    const expression = new IfExpression(this.curToken)
+
+    if (!this.expectPeek(TokenType.LPAREN)) {
+      return null
+    }
+
+    this.nextToken()
+    expression.condition = this.parseExpression(LOWEST)
+
+    if (!this.expectPeek(TokenType.RPAREN)) {
+      return null
+    }
+
+    if (!this.expectPeek(TokenType.LBRACE)) {
+      return null
+    }
+
+    expression.consequence = this.parseBlockStatement()
+
+    if (this.peekTokenIs(TokenType.ELSE)) {
+      this.nextToken()
+
+      if (!this.expectPeek(TokenType.LBRACE)) {
+        return null
+      }
+
+      expression.alternative = this.parseBlockStatement()
+    } else {
+      expression.alternative = new BlockStatement()
+    }
+
+    return expression
   }
 
   parseGroupedExpression() {

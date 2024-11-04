@@ -7,7 +7,7 @@ import {
   ExpressionStatement,
   IntegerLiteral,
   PrefixExpression,
-  InfixExpression,
+  IfExpression,
   BooleanLiteral,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
@@ -16,6 +16,7 @@ import {
   testInfixExpression,
   testIntegerLiteral,
   testBooleanLiteral,
+  testIdentifier,
 } from './utils.js'
 
 const testLetStatement = (statement, name) => {
@@ -436,6 +437,66 @@ const testBooleanExpression = () => {
   }
 }
 
+const testIfExpression = () => {
+  const input = `if (x < y) { x } `
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  if (program.statements.length !== 1) {
+    throw new Error(
+      `program.Statements does not contain 1 statements. got=${program.statements.length}`
+    )
+  }
+
+  let statement
+  if (program.statements[0] instanceof ExpressionStatement) {
+    statement = program.statements[0]
+  } else {
+    throw new Error(
+      `program.statements[0] is not ExpressionStatement. got=${typeof program
+        .statements[0]}`
+    )
+  }
+
+  let expression
+  if (statement.expression instanceof IfExpression) {
+    expression = statement.expression
+  } else {
+    throw new Error(
+      `stmt.expression is not IfExpression. got=${typeof statement.expression}`
+    )
+  }
+
+  testInfixExpression(expression.condition, 'x', '<', 'y')
+
+  if (expression.consequence.statements.length !== 1) {
+    throw new Error(
+      `consequence is not 1 statements. got=${expression.consequence.statements.length}`
+    )
+  }
+
+  let consequence
+  if (expression.consequence.statements[0] instanceof ExpressionStatement) {
+    consequence = expression.consequence.statements[0]
+  } else {
+    throw new Error(
+      `Statements[0] for consequence is not ExpressionStatement. got=${typeof expression
+        .consequence.statements[0]}`
+    )
+  }
+
+  testIdentifier(consequence.expression, 'x')
+
+  if (!expression.alternative) {
+    throw new Error(
+      `exp.Alternative.Statements was not null. got=${expression.alternative}`
+    )
+  }
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
@@ -446,6 +507,7 @@ const main = () => {
   testParsingInfixExpressions()
   testOperatorPrecedenceParsing()
   testBooleanExpression()
+  testIfExpression()
 }
 
 main()

@@ -1,4 +1,9 @@
-import { InfixExpression, IntegerLiteral, BooleanLiteral } from '../src/ast.js'
+import {
+  InfixExpression,
+  IntegerLiteral,
+  BooleanLiteral,
+  Identifier,
+} from '../src/ast.js'
 
 export const checkParserErrors = (parser) => {
   const errors = parser.getErrors()
@@ -28,7 +33,7 @@ export const testIntegerLiteral = (literal, value) => {
   return true
 }
 
-const testIdentifier = (expression, value) => {
+export const testIdentifier = (expression, value) => {
   let identifier
   if (expression instanceof Identifier) {
     identifier = expression
