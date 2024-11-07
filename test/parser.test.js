@@ -10,6 +10,7 @@ import {
   IfExpression,
   BooleanLiteral,
   FunctionLiteral,
+  CallExpression,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
 import {
@@ -387,6 +388,18 @@ const testOperatorPrecedenceParsing = () => {
       input: '!(true == true)',
       expected: '(!(true == true))',
     },
+    {
+      input: 'a + add(b * c) + d',
+      expected: '((a + add((b * c))) + d)',
+    },
+    {
+      input: 'add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))',
+      expected: 'add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))',
+    },
+    {
+      input: 'add(a + b + c * d / f + g)',
+      expected: 'add((((a + b) + ((c * d) / f)) + g))',
+    },
   ]
 
   for (const testCase of tests) {
@@ -560,7 +573,7 @@ const testFunctionLiteralParsing = () => {
   testInfixExpression(bodyStmt.expression, 'x', '+', 'y')
 }
 
-function testFunctionParameterParsing() {
+const testFunctionParameterParsing = () => {
   const tests = [
     { input: 'fn() {};', expectedParams: [] },
     { input: 'fn(x) {};', expectedParams: ['x'] },
@@ -603,6 +616,51 @@ function testFunctionParameterParsing() {
   }
 }
 
+const testCallExpressionParsing = () => {
+  const input = 'add(1, 2 * 3, 4 + 5);'
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  if (program.statements.length !== 1) {
+    throw new Error(
+      `program.statements does not contain 1 statements. got=${program.statements.length}`
+    )
+  }
+
+  let stmt
+  if (program.statements[0] instanceof ExpressionStatement) {
+    stmt = program.statements[0]
+  } else {
+    throw new Error(
+      `stmt is not ExpressionStatement. got=${typeof program.statements[0]}`
+    )
+  }
+
+  let exp
+  if (stmt.expression instanceof CallExpression) {
+    exp = stmt.expression
+  } else {
+    throw new Error(
+      `stmt.expression is not CallExpression. got=${typeof stmt.expression}`
+    )
+  }
+
+  if (!testIdentifier(exp.function, 'add')) {
+    return
+  }
+
+  if (exp.arguments.length !== 3) {
+    throw new Error(`wrong length of arguments. got=${exp.arguments.length}`)
+  }
+
+  testLiteralExpression(exp.arguments[0], 1)
+  testInfixExpression(exp.arguments[1], 2, '*', 3)
+  testInfixExpression(exp.arguments[2], 4, '+', 5)
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
@@ -616,6 +674,7 @@ const main = () => {
   testIfExpression()
   testFunctionLiteralParsing()
   testFunctionParameterParsing()
+  testCallExpressionParsing()
 }
 
 main()

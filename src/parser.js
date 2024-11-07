@@ -11,6 +11,7 @@ import {
   IfExpression,
   BooleanLiteral,
   FunctionLiteral,
+  CallExpression,
 } from './ast.js'
 import { TokenType } from './token.js'
 
@@ -32,6 +33,7 @@ const precedencesMap = {
   [TokenType.MINUS]: SUM,
   [TokenType.SLASH]: PRODUCT,
   [TokenType.ASTERISK]: PRODUCT,
+  [TokenType.LPAREN]: CALL,
 }
 
 export class Parser {
@@ -69,6 +71,7 @@ export class Parser {
     this.registerInfix(TokenType.NOT_EQ, this.parseInfixExpression.bind(this))
     this.registerInfix(TokenType.LT, this.parseInfixExpression.bind(this))
     this.registerInfix(TokenType.GT, this.parseInfixExpression.bind(this))
+    this.registerInfix(TokenType.LPAREN, this.parseCallExpression.bind(this))
 
     this.nextToken()
     this.nextToken()
@@ -270,6 +273,36 @@ export class Parser {
       return null
     }
     return expression
+  }
+
+  parseCallExpression(functionExpression) {
+    const expression = new CallExpression(this.curToken, functionExpression)
+    expression.arguments = this.parseCallArguments()
+    return expression
+  }
+
+  parseCallArguments() {
+    const args = []
+
+    if (this.peekTokenIs(TokenType.RPAREN)) {
+      this.nextToken()
+      return args
+    }
+
+    this.nextToken()
+    args.push(this.parseExpression(LOWEST))
+
+    while (this.peekTokenIs(TokenType.COMMA)) {
+      this.nextToken()
+      this.nextToken()
+      args.push(this.parseExpression(LOWEST))
+    }
+
+    if (!this.expectPeek(TokenType.RPAREN)) {
+      return null
+    }
+
+    return args
   }
 
   parsePrefixExpression() {

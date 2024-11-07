@@ -301,3 +301,28 @@ export class IfExpression extends Node {
     return out
   }
 }
+
+export class CallExpression extends Node {
+  constructor(token, functionExpression, fnArguments) {
+    super()
+    this.token = token
+    this.function = functionExpression
+    this.arguments = fnArguments
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    const args = this.arguments.map((arg) => arg.getString())
+    let out = ''
+    out += this.function.getString()
+    out += '('
+    out += args.join(', ')
+    out += ')'
+    return out
+  }
+}
