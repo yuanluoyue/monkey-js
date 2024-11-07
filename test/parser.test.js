@@ -47,39 +47,34 @@ const testLetStatement = (statement, name) => {
 }
 
 const testLetStatements = () => {
-  const input = `
-    let x = 5;
-    let y = 10;
-    let foobar = 838383;
-    `
-
-  const lexer = new Lexer(input)
-  const parser = new Parser(lexer)
-  const program = parser.parseProgram()
-
-  checkParserErrors(parser)
-
-  if (!program) {
-    throw new Error('parseProgram() returned null')
-  }
-
-  if (program.statements.length !== 3) {
-    throw new Error(
-      `program.Statements does not contain 3 statements. got=${program.statements.length}`
-    )
-  }
-
   const tests = [
-    { expectedIdentifier: 'x' },
-    { expectedIdentifier: 'y' },
-    { expectedIdentifier: 'foobar' },
+    { input: 'let x = 5;', expectedIdentifier: 'x', expectedValue: 5 },
+    { input: 'let y = true;', expectedIdentifier: 'y', expectedValue: true },
+    {
+      input: 'let foobar = y;',
+      expectedIdentifier: 'foobar',
+      expectedValue: 'y',
+    },
   ]
 
-  for (let i = 0; i < tests.length; i++) {
-    const statement = program.statements[i]
-    if (!testLetStatement(statement, tests[i].expectedIdentifier)) {
-      return
+  for (const test of tests) {
+    const lexer = new Lexer(test.input)
+    const parser = new Parser(lexer)
+    const program = parser.parseProgram()
+
+    checkParserErrors(parser)
+
+    if (program.statements.length !== 1) {
+      throw new Error(
+        `program.statements does not contain 1 statements. got=${program.statements.length}`
+      )
     }
+
+    const stmt = program.statements[0]
+    testLetStatement(stmt, test.expectedIdentifier)
+
+    const val = stmt.value
+    testLiteralExpression(val, test.expectedValue)
   }
 }
 
@@ -87,7 +82,7 @@ const testReturnStatements = () => {
   const input = `
     return 5;
     return 10;
-    return 993 322;
+    return 993 + 322;
     `
 
   const lexer = new Lexer(input)

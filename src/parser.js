@@ -121,7 +121,11 @@ export class Parser {
       return null
     }
 
-    while (!this.curTokenIs(TokenType.SEMICOLON)) {
+    this.nextToken()
+
+    statement.value = this.parseExpression(LOWEST)
+
+    if (this.peekTokenIs(TokenType.SEMICOLON)) {
       this.nextToken()
     }
 
@@ -130,9 +134,15 @@ export class Parser {
 
   parseReturnStatement() {
     const statement = new ReturnStatement(this.curToken)
-    while (!this.curTokenIs(TokenType.SEMICOLON)) {
+
+    this.nextToken()
+
+    statement.returnValue = this.parseExpression(LOWEST)
+
+    if (this.peekTokenIs(TokenType.SEMICOLON)) {
       this.nextToken()
     }
+
     return statement
   }
 
