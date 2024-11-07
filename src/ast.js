@@ -197,6 +197,32 @@ export class BooleanLiteral extends Node {
   }
 }
 
+export class FunctionLiteral extends Node {
+  constructor(token, parameters, body) {
+    super()
+    this.token = token
+    this.parameters = parameters
+    this.body = body
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    const params = this.parameters.map((p) => p.getString())
+    let out = ''
+    out += this.tokenLiteral()
+    out += '('
+    out += params.join(', ')
+    out += ') '
+    out += this.body.getString()
+    return out
+  }
+}
+
 export class PrefixExpression extends Node {
   constructor(token, operator, right) {
     super()

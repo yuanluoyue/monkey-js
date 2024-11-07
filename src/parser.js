@@ -10,6 +10,7 @@ import {
   InfixExpression,
   IfExpression,
   BooleanLiteral,
+  FunctionLiteral,
 } from './ast.js'
 import { TokenType } from './token.js'
 
@@ -55,6 +56,10 @@ export class Parser {
       this.parseGroupedExpression.bind(this)
     )
     this.registerPrefix(TokenType.IF, this.parseIfExpression.bind(this))
+    this.registerPrefix(
+      TokenType.FUNCTION,
+      this.parseFunctionLiteral.bind(this)
+    )
 
     this.registerInfix(TokenType.PLUS, this.parseInfixExpression.bind(this))
     this.registerInfix(TokenType.MINUS, this.parseInfixExpression.bind(this))
@@ -176,6 +181,51 @@ export class Parser {
 
   parseBooleanLiteral() {
     return new BooleanLiteral(this.curToken)
+  }
+
+  parseFunctionLiteral() {
+    const literal = new FunctionLiteral(this.curToken)
+
+    if (!this.expectPeek(TokenType.LPAREN)) {
+      return null
+    }
+
+    literal.parameters = this.parseFunctionParameters()
+
+    if (!this.expectPeek(TokenType.LBRACE)) {
+      return null
+    }
+
+    literal.body = this.parseBlockStatement()
+
+    return literal
+  }
+
+  parseFunctionParameters() {
+    const identifiers = []
+
+    if (this.peekTokenIs(TokenType.RPAREN)) {
+      this.nextToken()
+      return identifiers
+    }
+
+    this.nextToken()
+
+    const ident = new Identifier(this.curToken, this.curToken.literal)
+    identifiers.push(ident)
+
+    while (this.peekTokenIs(TokenType.COMMA)) {
+      this.nextToken()
+      this.nextToken()
+      const newIdent = new Identifier(this.curToken, this.curToken.literal)
+      identifiers.push(newIdent)
+    }
+
+    if (!this.expectPeek(TokenType.RPAREN)) {
+      return null
+    }
+
+    return identifiers
   }
 
   parseIfExpression() {

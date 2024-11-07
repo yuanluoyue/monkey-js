@@ -9,6 +9,7 @@ import {
   PrefixExpression,
   IfExpression,
   BooleanLiteral,
+  FunctionLiteral,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
 import {
@@ -17,6 +18,7 @@ import {
   testIntegerLiteral,
   testBooleanLiteral,
   testIdentifier,
+  testLiteralExpression,
 } from './utils.js'
 
 const testLetStatement = (statement, name) => {
@@ -497,6 +499,110 @@ const testIfExpression = () => {
   }
 }
 
+const testFunctionLiteralParsing = () => {
+  const input = `fn(x, y) { x + y; }`
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  if (program.statements.length !== 1) {
+    throw new Error(
+      `program.statements does not contain 1 statements. got=${program.statements.length}`
+    )
+  }
+
+  let stmt
+  if (program.statements[0] instanceof ExpressionStatement) {
+    stmt = program.statements[0]
+  } else {
+    throw new Error(
+      `program.statements[0] is not ExpressionStatement. got=${typeof program
+        .statements[0]}`
+    )
+  }
+
+  let fn
+  if (stmt.expression instanceof FunctionLiteral) {
+    fn = stmt.expression
+  } else {
+    throw new Error(
+      `stmt.expression is not FunctionLiteral. got=${typeof stmt.expression}`
+    )
+  }
+
+  if (fn.parameters.length !== 2) {
+    throw new Error(
+      `function literal parameters wrong. want 2, got=${fn.parameters.length}`
+    )
+  }
+
+  testLiteralExpression(fn.parameters[0], 'x')
+  testLiteralExpression(fn.parameters[1], 'y')
+
+  if (fn.body.statements.length !== 1) {
+    throw new Error(
+      `fn.Body.Statements has not 1 statements. got=${fn.body.statements.length}`
+    )
+  }
+
+  let bodyStmt
+  if (fn.body.statements[0] instanceof ExpressionStatement) {
+    bodyStmt = fn.body.statements[0]
+  } else {
+    throw new Error(
+      `function body stmt is not ExpressionStatement. got=${typeof fn.body
+        .statements[0]}`
+    )
+  }
+
+  testInfixExpression(bodyStmt.expression, 'x', '+', 'y')
+}
+
+function testFunctionParameterParsing() {
+  const tests = [
+    { input: 'fn() {};', expectedParams: [] },
+    { input: 'fn(x) {};', expectedParams: ['x'] },
+    { input: 'fn(x, y, z) {};', expectedParams: ['x', 'y', 'z'] },
+  ]
+
+  for (const test of tests) {
+    const lexer = new Lexer(test.input)
+    const parser = new Parser(lexer)
+    const program = parser.parseProgram()
+
+    checkParserErrors(parser)
+
+    const stmt = program.statements[0]
+
+    if (!(stmt instanceof ExpressionStatement)) {
+      throw new Error(
+        `program.Statements[0] is not ExpressionStatement. got=${typeof program
+          .statements[0]}`
+      )
+    }
+
+    const fn = stmt.expression
+
+    if (!(fn instanceof FunctionLiteral)) {
+      throw new Error(
+        `stmt.Expression is not FunctionLiteral. got=${typeof stmt.expression}`
+      )
+    }
+
+    if (fn.parameters.length !== test.expectedParams.length) {
+      throw new Error(
+        `length parameters wrong. want ${test.expectedParams.length}, got=${fn.parameters.length}`
+      )
+    }
+
+    for (let i = 0; i < test.expectedParams.length; i++) {
+      testLiteralExpression(fn.parameters[i], test.expectedParams[i])
+    }
+  }
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
@@ -508,6 +614,8 @@ const main = () => {
   testOperatorPrecedenceParsing()
   testBooleanExpression()
   testIfExpression()
+  testFunctionLiteralParsing()
+  testFunctionParameterParsing()
 }
 
 main()

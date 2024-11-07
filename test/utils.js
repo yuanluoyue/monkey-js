@@ -79,7 +79,7 @@ export const testBooleanLiteral = (expression, value) => {
   return true
 }
 
-const testLiteralExpression = (expression, expected) => {
+export const testLiteralExpression = (expression, expected) => {
   switch (typeof expected) {
     case 'number':
       return testIntegerLiteral(expression, expected)
