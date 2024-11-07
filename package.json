@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "repl": "node ./src/main.js"
   },
   "keywords": [],
   "author": "",
