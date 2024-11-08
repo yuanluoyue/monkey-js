@@ -1,6 +1,7 @@
 import { createInterface } from 'readline'
 import { Lexer } from './lexer.js'
 import { Parser } from './parser.js'
+import { evalMonkey } from './object.js'
 
 const MONKEY_FACE = `            
             __,__
@@ -47,8 +48,11 @@ export const startRepl = (
       return
     }
 
-    outputStream.write(program.getString())
-    outputStream.write('\n')
+    const evaluated = evalMonkey(program)
+    if (evaluated !== null) {
+      outputStream.write(evaluated.inspect())
+      outputStream.write('\n')
+    }
 
     rl.prompt()
   })
