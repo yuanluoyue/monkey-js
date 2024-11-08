@@ -16,14 +16,6 @@ class Node {
   }
 }
 
-class Statement extends Node {
-  statementNode() {}
-}
-
-class Expression extends Node {
-  expressionNode() {}
-}
-
 export class Program extends Node {
   statements = []
 
