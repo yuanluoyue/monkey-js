@@ -4,6 +4,7 @@ import {
   ExpressionStatement,
   Program,
   PrefixExpression,
+  InfixExpression,
 } from './ast.js'
 
 import { TokenType } from './token.js'
@@ -108,7 +109,51 @@ function evalPrefixExpression(operator, right) {
     case TokenType.MINUS:
       return evalMinusPrefixOperatorExpression(right)
     default:
-      return null
+      return singleNull
+  }
+}
+
+function evalIntegerInfixExpression(operator, left, right) {
+  const leftVal = left.value
+  const rightVal = right.value
+
+  switch (operator) {
+    case TokenType.PLUS:
+      return new MonkeyInteger(leftVal + rightVal)
+    case TokenType.MINUS:
+      return new MonkeyInteger(leftVal - rightVal)
+    case TokenType.ASTERISK:
+      return new MonkeyInteger(leftVal * rightVal)
+    case TokenType.SLASH:
+      return new MonkeyInteger(leftVal / rightVal)
+    case TokenType.LT:
+      return new nativeBoolToBooleanObject(leftVal < rightVal)
+    case TokenType.GT:
+      return new nativeBoolToBooleanObject(leftVal > rightVal)
+    case TokenType.EQ:
+      return new nativeBoolToBooleanObject(leftVal === rightVal)
+    case TokenType.NOT_EQ:
+      return new nativeBoolToBooleanObject(leftVal !== rightVal)
+    default:
+      return singleNull
+  }
+}
+
+function evalInfixExpression(operator, left, right) {
+  if (
+    left.type() === MonkeyObjectType.INTEGER &&
+    right.type() === MonkeyObjectType.INTEGER
+  ) {
+    return evalIntegerInfixExpression(operator, left, right)
+  }
+
+  switch (operator) {
+    case TokenType.EQ:
+      return nativeBoolToBooleanObject(left === right)
+    case TokenType.NOT_EQ:
+      return nativeBoolToBooleanObject(left !== right)
+    default:
+      return singleNull
   }
 }
 
@@ -125,6 +170,11 @@ export function evalMonkey(node) {
     case node instanceof PrefixExpression:
       const right = evalMonkey(node.right)
       return evalPrefixExpression(node.operator, right)
+    case node instanceof InfixExpression: {
+      const left = evalMonkey(node.left)
+      const right = evalMonkey(node.right)
+      return evalInfixExpression(node.operator, left, right)
+    }
   }
 
   return singleNull

@@ -1,7 +1,7 @@
 import { createInterface } from 'readline'
 import { Lexer } from './lexer.js'
 import { Parser } from './parser.js'
-import { evalMonkey } from './object.js'
+import { evalMonkey } from './evaluator.js'
 
 const MONKEY_FACE = `            
             __,__
