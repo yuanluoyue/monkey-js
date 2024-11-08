@@ -3,7 +3,10 @@ import {
   BooleanLiteral,
   ExpressionStatement,
   Program,
+  PrefixExpression,
 } from './ast.js'
+
+import { TokenType } from './token.js'
 
 const MonkeyObjectType = {
   INTEGER: 'INTEGER',
@@ -76,6 +79,39 @@ function evalStatements(statements) {
   return result
 }
 
+function evalBangOperatorExpression(right) {
+  switch (right.value) {
+    case true:
+      return singleFalse
+    case false:
+      return singleTrue
+    case null:
+    case undefined:
+      return singleTrue
+    default:
+      return singleFalse
+  }
+}
+
+function evalMinusPrefixOperatorExpression(right) {
+  if (right.type() !== MonkeyObjectType.INTEGER) {
+    return singleNull
+  }
+  const value = right.value
+  return new MonkeyInteger(-value)
+}
+
+function evalPrefixExpression(operator, right) {
+  switch (operator) {
+    case TokenType.BANG:
+      return evalBangOperatorExpression(right)
+    case TokenType.MINUS:
+      return evalMinusPrefixOperatorExpression(right)
+    default:
+      return null
+  }
+}
+
 export function evalMonkey(node) {
   switch (true) {
     case node instanceof Program:
@@ -86,6 +122,9 @@ export function evalMonkey(node) {
       return new MonkeyInteger(node.value)
     case node instanceof BooleanLiteral:
       return nativeBoolToBooleanObject(node.value)
+    case node instanceof PrefixExpression:
+      const right = evalMonkey(node.right)
+      return evalPrefixExpression(node.operator, right)
   }
 
   return singleNull

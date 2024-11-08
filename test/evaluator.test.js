@@ -14,6 +14,8 @@ const testEvalIntegerExpression = () => {
   const tests = [
     { input: '5', expected: 5 },
     { input: '10', expected: 10 },
+    { input: '-5', expected: -5 },
+    { input: '-10', expected: -10 },
   ]
 
   for (const test of tests) {
@@ -38,9 +40,28 @@ const testEvalBooleanExpression = () => {
   }
 }
 
+const testBangOperator = () => {
+  const tests = [
+    { input: '!true', expected: false },
+    { input: '!false', expected: true },
+    { input: '!5', expected: false },
+    { input: '!!true', expected: true },
+    { input: '!!false', expected: false },
+    { input: '!!5', expected: true },
+  ]
+
+  for (const test of tests) {
+    const evaluated = testEval(test.input)
+    if (!testBooleanObject(evaluated, test.expected)) {
+      return
+    }
+  }
+}
+
 const main = () => {
   testEvalIntegerExpression()
   testEvalBooleanExpression()
+  testBangOperator()
 }
 
 main()
