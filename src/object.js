@@ -60,11 +60,12 @@ export class MonkeyNull extends MonkeyObject {
   }
 }
 
-const nativeTrue = new MonkeyBoolean(true)
-const nativeFalse = new MonkeyBoolean(false)
+const singleTrue = new MonkeyBoolean(true)
+const singleFalse = new MonkeyBoolean(false)
+const singleNull = new MonkeyNull(false)
 
 function nativeBoolToBooleanObject(bool) {
-  return bool ? nativeTrue : nativeFalse
+  return bool ? singleTrue : singleFalse
 }
 
 function evalStatements(statements) {
@@ -87,5 +88,5 @@ export function evalMonkey(node) {
       return nativeBoolToBooleanObject(node.value)
   }
 
-  return new MonkeyNull()
+  return singleNull
 }
