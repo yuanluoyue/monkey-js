@@ -1,4 +1,9 @@
-import { IntegerLiteral, ExpressionStatement, Program } from './ast.js'
+import {
+  IntegerLiteral,
+  BooleanLiteral,
+  ExpressionStatement,
+  Program,
+} from './ast.js'
 
 const MonkeyObjectType = {
   INTEGER: 'INTEGER',
@@ -55,6 +60,13 @@ export class MonkeyNull extends MonkeyObject {
   }
 }
 
+const nativeTrue = new MonkeyBoolean(true)
+const nativeFalse = new MonkeyBoolean(false)
+
+function nativeBoolToBooleanObject(bool) {
+  return bool ? nativeTrue : nativeFalse
+}
+
 function evalStatements(statements) {
   let result
   for (const statement of statements) {
@@ -71,6 +83,8 @@ export function evalMonkey(node) {
       return evalMonkey(node.expression)
     case node instanceof IntegerLiteral:
       return new MonkeyInteger(node.value)
+    case node instanceof BooleanLiteral:
+      return nativeBoolToBooleanObject(node.value)
   }
 
   return new MonkeyNull()

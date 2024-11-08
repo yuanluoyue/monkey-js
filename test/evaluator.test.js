@@ -1,24 +1,13 @@
 import { Parser } from '../src/parser.js'
 import { Lexer } from '../src/lexer.js'
-import { MonkeyInteger, evalMonkey } from '../src/object.js'
+import { evalMonkey } from '../src/object.js'
+import { testIntegerObject, testBooleanObject } from './utils.js'
 
 const testEval = (input) => {
   const lexer = new Lexer(input)
   const parser = new Parser(lexer)
   const program = parser.parseProgram()
   return evalMonkey(program)
-}
-
-const testIntegerObject = (obj, expected) => {
-  if (!(obj instanceof MonkeyInteger)) {
-    throw new Error(`object is not Integer. got=${typeof obj} (${obj})`)
-  }
-  if (obj.value !== expected) {
-    throw new Error(
-      `object has wrong value. got=${obj.value}, want=${expected}`
-    )
-  }
-  return true
 }
 
 const testEvalIntegerExpression = () => {
@@ -35,8 +24,23 @@ const testEvalIntegerExpression = () => {
   }
 }
 
+const testEvalBooleanExpression = () => {
+  const tests = [
+    { input: 'true', expected: true },
+    { input: 'false', expected: false },
+  ]
+
+  for (const test of tests) {
+    const evaluated = testEval(test.input)
+    if (!testBooleanObject(evaluated, test.expected)) {
+      return
+    }
+  }
+}
+
 const main = () => {
   testEvalIntegerExpression()
+  testEvalBooleanExpression()
 }
 
 main()

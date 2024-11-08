@@ -4,6 +4,7 @@ import {
   BooleanLiteral,
   Identifier,
 } from '../src/ast.js'
+import { MonkeyInteger, MonkeyBoolean } from '../src/object.js'
 
 export const checkParserErrors = (parser) => {
   const errors = parser.getErrors()
@@ -114,5 +115,29 @@ export const testInfixExpression = (expression, left, operator, right) => {
     return false
   }
 
+  return true
+}
+
+export const testIntegerObject = (obj, expected) => {
+  if (!(obj instanceof MonkeyInteger)) {
+    throw new Error(`object is not Integer. got=${typeof obj} (${obj})`)
+  }
+  if (obj.value !== expected) {
+    throw new Error(
+      `object has wrong value. got=${obj.value}, want=${expected}`
+    )
+  }
+  return true
+}
+
+export const testBooleanObject = (obj, expected) => {
+  if (!(obj instanceof MonkeyBoolean)) {
+    throw new Error(`object is not Boolean. got=${typeof obj} (${obj})`)
+  }
+  if (obj.value !== expected) {
+    throw new Error(
+      `object has wrong value. got=${obj.value}, want=${expected}`
+    )
+  }
   return true
 }
