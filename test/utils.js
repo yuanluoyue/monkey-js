@@ -145,7 +145,7 @@ export const testBooleanObject = (obj, expected) => {
 
 export const testNullObject = (obj) => {
   if (!(obj instanceof MonkeyNull)) {
-    throw new `object is not NULL. got=${typeof obj} (${obj})`()
+    throw new Error(`object is not NULL. got=${typeof obj} (${obj})`)
   }
   return true
 }

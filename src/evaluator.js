@@ -17,6 +17,7 @@ const MonkeyObjectType = {
   BOOLEAN: 'BOOLEAN',
   NULL: 'NULL',
   RETURN_VALUE: 'RETURN_VALUE',
+  ERROR: 'ERROR',
 }
 
 class MonkeyObject {
@@ -83,12 +84,40 @@ export class MonkeyReturnValue extends MonkeyObject {
   }
 }
 
+export class MonkeyError extends MonkeyObject {
+  constructor(message) {
+    super()
+    this.message = message
+  }
+  type() {
+    return MonkeyObjectType.ERROR
+  }
+  inspect() {
+    return 'ERROR: ' + this.message
+  }
+}
+
 const singleTrue = new MonkeyBoolean(true)
 const singleFalse = new MonkeyBoolean(false)
 const singleNull = new MonkeyNull(false)
 
+function newMonkeyError(format, ...a) {
+  return new MonkeyError(
+    format.replace(/%[sd]/g, (match) => {
+      const arg = a.shift()
+      return typeof arg === 'string' || typeof arg === 'number'
+        ? arg.toString()
+        : match
+    })
+  )
+}
+
 function nativeBoolToBooleanObject(bool) {
   return bool ? singleTrue : singleFalse
+}
+
+function isError(obj) {
+  return obj && obj.type() === MonkeyObjectType.ERROR
 }
 
 function isTruthy(obj) {
@@ -110,7 +139,9 @@ function evalProgram(program) {
   let result
   for (const statement of program) {
     result = evalMonkey(statement)
-    if (result instanceof MonkeyReturnValue) {
+    if (result instanceof MonkeyError) {
+      return result
+    } else if (result instanceof MonkeyReturnValue) {
       return result.value
     }
   }
@@ -121,7 +152,12 @@ function evalBlockStatement(statements) {
   let result
   for (const statement of statements) {
     result = evalMonkey(statement)
-    if (result && result.type() === MonkeyObjectType.RETURN_VALUE) {
+    const type = result.type()
+    if (
+      result &&
+      (type === MonkeyObjectType.RETURN_VALUE ||
+        type === MonkeyObjectType.ERROR)
+    ) {
       return result
     }
   }
@@ -144,7 +180,7 @@ function evalBangOperatorExpression(right) {
 
 function evalMinusPrefixOperatorExpression(right) {
   if (right.type() !== MonkeyObjectType.INTEGER) {
-    return singleNull
+    return newMonkeyError(`unknown operator: -${right.type()}`)
   }
   const value = right.value
   return new MonkeyInteger(-value)
@@ -157,7 +193,7 @@ function evalPrefixExpression(operator, right) {
     case TokenType.MINUS:
       return evalMinusPrefixOperatorExpression(right)
     default:
-      return singleNull
+      return newMonkeyError(`unknown operator: ${operator}${right.type()}`)
   }
 }
 
@@ -183,7 +219,9 @@ function evalIntegerInfixExpression(operator, left, right) {
     case TokenType.NOT_EQ:
       return new nativeBoolToBooleanObject(leftVal !== rightVal)
     default:
-      return singleNull
+      return newMonkeyError(
+        `type mismatch: ${left.type()} ${operator} ${right.type()}`
+      )
   }
 }
 
@@ -195,18 +233,28 @@ function evalInfixExpression(operator, left, right) {
     return evalIntegerInfixExpression(operator, left, right)
   }
 
-  switch (operator) {
-    case TokenType.EQ:
+  switch (true) {
+    case operator === TokenType.EQ:
       return nativeBoolToBooleanObject(left === right)
-    case TokenType.NOT_EQ:
+    case operator === TokenType.NOT_EQ:
       return nativeBoolToBooleanObject(left !== right)
+    case left.type !== right.type:
+      return newMonkeyError(
+        `type mismatch: ${left.type()} ${operator} ${right.type()}`
+      )
     default:
-      return singleNull
+      return newMonkeyError(
+        `unknown operator: ${left.type()} ${operator} ${right.type()}`
+      )
   }
 }
 
 function evalIfExpression(ifExpression) {
   const condition = evalMonkey(ifExpression.condition)
+
+  if (isError(condition)) {
+    return condition
+  }
 
   if (isTruthy(condition)) {
     return evalMonkey(ifExpression.consequence)
@@ -229,10 +277,20 @@ export function evalMonkey(node) {
       return nativeBoolToBooleanObject(node.value)
     case node instanceof PrefixExpression:
       const right = evalMonkey(node.right)
+      if (isError(right)) {
+        return right
+      }
       return evalPrefixExpression(node.operator, right)
     case node instanceof InfixExpression: {
       const left = evalMonkey(node.left)
+      if (isError(left)) {
+        return left
+      }
       const right = evalMonkey(node.right)
+
+      if (isError(right)) {
+        return right
+      }
       return evalInfixExpression(node.operator, left, right)
     }
     case node instanceof BlockStatement:
@@ -241,6 +299,9 @@ export function evalMonkey(node) {
       return evalIfExpression(node)
     case node instanceof ReturnStatement:
       const val = evalMonkey(node.returnValue)
+      if (isError(val)) {
+        return val
+      }
       return new MonkeyReturnValue(val)
   }
 
