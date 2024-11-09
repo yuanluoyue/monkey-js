@@ -7,6 +7,7 @@ import {
   InfixExpression,
   BlockStatement,
   IfExpression,
+  ReturnStatement,
 } from './ast.js'
 
 import { TokenType } from './token.js'
@@ -15,6 +16,7 @@ const MonkeyObjectType = {
   INTEGER: 'INTEGER',
   BOOLEAN: 'BOOLEAN',
   NULL: 'NULL',
+  RETURN_VALUE: 'RETURN_VALUE',
 }
 
 class MonkeyObject {
@@ -66,6 +68,21 @@ export class MonkeyNull extends MonkeyObject {
   }
 }
 
+export class MonkeyReturnValue extends MonkeyObject {
+  constructor(value) {
+    super()
+    this.value = value
+  }
+
+  type() {
+    return MonkeyObjectType.RETURN_VALUE
+  }
+
+  inspect() {
+    return this.value.toString()
+  }
+}
+
 const singleTrue = new MonkeyBoolean(true)
 const singleFalse = new MonkeyBoolean(false)
 const singleNull = new MonkeyNull(false)
@@ -89,10 +106,24 @@ function isTruthy(obj) {
   }
 }
 
-function evalStatements(statements) {
+function evalProgram(program) {
+  let result
+  for (const statement of program) {
+    result = evalMonkey(statement)
+    if (result instanceof MonkeyReturnValue) {
+      return result.value
+    }
+  }
+  return result
+}
+
+function evalBlockStatement(statements) {
   let result
   for (const statement of statements) {
     result = evalMonkey(statement)
+    if (result && result.type() === MonkeyObjectType.RETURN_VALUE) {
+      return result
+    }
   }
   return result
 }
@@ -189,7 +220,7 @@ function evalIfExpression(ifExpression) {
 export function evalMonkey(node) {
   switch (true) {
     case node instanceof Program:
-      return evalStatements(node.statements)
+      return evalProgram(node.statements)
     case node instanceof ExpressionStatement:
       return evalMonkey(node.expression)
     case node instanceof IntegerLiteral:
@@ -205,9 +236,12 @@ export function evalMonkey(node) {
       return evalInfixExpression(node.operator, left, right)
     }
     case node instanceof BlockStatement:
-      return evalStatements(node.statements)
+      return evalBlockStatement(node.statements)
     case node instanceof IfExpression:
       return evalIfExpression(node)
+    case node instanceof ReturnStatement:
+      const val = evalMonkey(node.returnValue)
+      return new MonkeyReturnValue(val)
   }
 
   return singleNull
