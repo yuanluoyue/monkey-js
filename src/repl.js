@@ -1,7 +1,7 @@
 import { createInterface } from 'readline'
 import { Lexer } from './lexer.js'
 import { Parser } from './parser.js'
-import { evalMonkey } from './evaluator.js'
+import { evalMonkey, newEnvironment } from './evaluator.js'
 
 const MONKEY_FACE = `            
             __,__
@@ -35,6 +35,8 @@ export const startRepl = (
     prompt: PROMPT,
   })
 
+  const env = newEnvironment()
+
   rl.prompt()
 
   rl.on('line', (line) => {
@@ -48,7 +50,8 @@ export const startRepl = (
       return
     }
 
-    const evaluated = evalMonkey(program)
+    const evaluated = evalMonkey(program, env)
+
     if (evaluated !== null) {
       outputStream.write(evaluated.inspect())
       outputStream.write('\n')

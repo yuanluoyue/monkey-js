@@ -167,6 +167,10 @@ function testErrorHandling() {
       input: `if (10 > 1) { if (10 > 1) { return true + false; } return 1; }`,
       expectedMessage: 'unknown operator: BOOLEAN + BOOLEAN',
     },
+    {
+      input: 'foobar',
+      expectedMessage: 'identifier not found: foobar',
+    },
   ]
 
   for (const test of tests) {
@@ -184,6 +188,22 @@ function testErrorHandling() {
   }
 }
 
+function testLetStatements() {
+  const tests = [
+    { input: 'let a = 5; a;', expected: 5 },
+    { input: 'let a = 5 * 5; a;', expected: 25 },
+    { input: 'let a = 5; let b = a; b;', expected: 5 },
+    { input: 'let a = 5; let b = a; let c = a + b + 5; c;', expected: 15 },
+  ]
+
+  for (const test of tests) {
+    const evaluated = testEval(test.input)
+    if (!testIntegerObject(evaluated, test.expected)) {
+      return
+    }
+  }
+}
+
 const main = () => {
   testEvalIntegerExpression()
   testEvalBooleanExpression()
@@ -191,6 +211,7 @@ const main = () => {
   testIfElseExpressions()
   testReturnStatements()
   testErrorHandling()
+  testLetStatements()
 }
 
 main()
