@@ -1,7 +1,11 @@
 import { Parser } from '../src/parser.js'
 import { Lexer } from '../src/lexer.js'
 import { evalMonkey } from '../src/evaluator.js'
-import { testIntegerObject, testBooleanObject } from './utils.js'
+import {
+  testIntegerObject,
+  testBooleanObject,
+  testNullObject,
+} from './utils.js'
 
 const testEval = (input) => {
   const lexer = new Lexer(input)
@@ -86,10 +90,38 @@ const testBangOperator = () => {
   }
 }
 
+function testIfElseExpressions() {
+  const tests = [
+    { input: 'if (true) { 10 }', expected: 10 },
+    { input: 'if (false) { 10 }', expected: null },
+    { input: 'if (1) { 10 }', expected: 10 },
+    { input: 'if (0) { 10 }', expected: null },
+    { input: 'if (1 < 2) { 10 }', expected: 10 },
+    { input: 'if (1 > 2) { 10; }', expected: null },
+    { input: 'if (1 > 2) { 10; } else { 20; }', expected: 20 },
+    { input: 'if (1 < 2) { 10; } else { 20; }', expected: 10 },
+  ]
+
+  for (const test of tests) {
+    const evaluated = testEval(test.input)
+
+    if (typeof test.expected === 'number') {
+      if (!testIntegerObject(evaluated, test.expected)) {
+        return
+      }
+    } else {
+      if (!testNullObject(evaluated)) {
+        return
+      }
+    }
+  }
+}
+
 const main = () => {
   testEvalIntegerExpression()
   testEvalBooleanExpression()
   testBangOperator()
+  testIfElseExpressions()
 }
 
 main()

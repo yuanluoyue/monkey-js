@@ -4,7 +4,7 @@ import {
   BooleanLiteral,
   Identifier,
 } from '../src/ast.js'
-import { MonkeyInteger, MonkeyBoolean } from '../src/evaluator.js'
+import { MonkeyInteger, MonkeyBoolean, MonkeyNull } from '../src/evaluator.js'
 
 export const checkParserErrors = (parser) => {
   const errors = parser.getErrors()
@@ -139,6 +139,13 @@ export const testBooleanObject = (obj, expected) => {
     throw new Error(
       `object has wrong value. got=${obj.value}, want=${expected}`
     )
+  }
+  return true
+}
+
+export const testNullObject = (obj) => {
+  if (!(obj instanceof MonkeyNull)) {
+    throw new `object is not NULL. got=${typeof obj} (${obj})`()
   }
   return true
 }

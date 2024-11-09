@@ -5,6 +5,8 @@ import {
   Program,
   PrefixExpression,
   InfixExpression,
+  BlockStatement,
+  IfExpression,
 } from './ast.js'
 
 import { TokenType } from './token.js'
@@ -70,6 +72,21 @@ const singleNull = new MonkeyNull(false)
 
 function nativeBoolToBooleanObject(bool) {
   return bool ? singleTrue : singleFalse
+}
+
+function isTruthy(obj) {
+  if (obj instanceof MonkeyInteger && obj.value !== 0) {
+    return true
+  }
+
+  switch (obj) {
+    case singleTrue:
+      return true
+    case singleNull:
+    case singleFalse:
+    default:
+      return false
+  }
 }
 
 function evalStatements(statements) {
@@ -157,6 +174,18 @@ function evalInfixExpression(operator, left, right) {
   }
 }
 
+function evalIfExpression(ifExpression) {
+  const condition = evalMonkey(ifExpression.condition)
+
+  if (isTruthy(condition)) {
+    return evalMonkey(ifExpression.consequence)
+  } else if (ifExpression.alternative && ifExpression.alternative.token) {
+    return evalMonkey(ifExpression.alternative)
+  } else {
+    return singleNull
+  }
+}
+
 export function evalMonkey(node) {
   switch (true) {
     case node instanceof Program:
@@ -175,6 +204,10 @@ export function evalMonkey(node) {
       const right = evalMonkey(node.right)
       return evalInfixExpression(node.operator, left, right)
     }
+    case node instanceof BlockStatement:
+      return evalStatements(node.statements)
+    case node instanceof IfExpression:
+      return evalIfExpression(node)
   }
 
   return singleNull
