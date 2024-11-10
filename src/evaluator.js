@@ -10,6 +10,8 @@ import {
   ReturnStatement,
   LetStatement,
   Identifier,
+  FunctionLiteral,
+  CallExpression,
 } from './ast.js'
 
 import { TokenType } from './token.js'
@@ -20,6 +22,7 @@ const MonkeyObjectType = {
   NULL: 'NULL',
   RETURN_VALUE: 'RETURN_VALUE',
   ERROR: 'ERROR',
+  FUNCTION: 'FUNCTION',
 }
 
 class MonkeyObject {
@@ -99,13 +102,37 @@ export class MonkeyError extends MonkeyObject {
   }
 }
 
+export class MonkeyFunction {
+  constructor(parameters, body, env) {
+    this.parameters = parameters
+    this.body = body
+    this.env = env
+  }
+  type() {
+    return MonkeyObjectType.FUNCTION
+  }
+  inspect() {
+    let params = []
+    for (const p of this.parameters) {
+      params.push(p.getString())
+    }
+    let out = `fn(${params.join(', ')}) {\n${this.body.getString()}\n}`
+    return out
+  }
+}
+
 class MonkeyEnvironment {
-  constructor() {
+  constructor(outer = null) {
     this.store = {}
+    this.outer = outer
   }
 
   get(name) {
-    return this.store?.[name]
+    let obj = this.store?.[name]
+    if (!obj && this.outer) {
+      return this.outer.get(name)
+    }
+    return obj
   }
 
   set(name, val) {
@@ -133,6 +160,10 @@ export function newEnvironment() {
   return new MonkeyEnvironment()
 }
 
+function newEnclosedEnvironment(outer) {
+  return new MonkeyEnvironment(outer)
+}
+
 function nativeBoolToBooleanObject(bool) {
   return bool ? singleTrue : singleFalse
 }
@@ -154,6 +185,13 @@ function isTruthy(obj) {
     default:
       return false
   }
+}
+
+function unwrapReturnValue(obj) {
+  if (obj instanceof MonkeyReturnValue) {
+    return obj.value
+  }
+  return obj
 }
 
 function evalProgram(program, env) {
@@ -294,6 +332,35 @@ function evalIdentifier(node, env) {
   return val
 }
 
+function evalExpressions(expressions, env) {
+  const result = []
+  for (const expression of expressions) {
+    const evaluated = evalMonkey(expression, env)
+    if (isError(evaluated)) {
+      return [evaluated]
+    }
+    result.push(evaluated)
+  }
+  return result
+}
+
+function extendFunctionEnv(fn, args) {
+  const env = newEnclosedEnvironment(fn.env)
+  for (let paramIdx = 0; paramIdx < fn.parameters.length; paramIdx++) {
+    env.set(fn.parameters[paramIdx].value, args[paramIdx])
+  }
+  return env
+}
+
+function applyFunction(fn, args) {
+  if (!(fn instanceof MonkeyFunction)) {
+    return newMonkeyError(`not a function: ${fn.type}`)
+  }
+  const extendedEnv = extendFunctionEnv(fn, args)
+  const evaluated = evalMonkey(fn.body, extendedEnv)
+  return unwrapReturnValue(evaluated)
+}
+
 export function evalMonkey(node, env = newEnvironment()) {
   switch (true) {
     case node instanceof Program:
@@ -340,9 +407,24 @@ export function evalMonkey(node, env = newEnvironment()) {
       env.set(node.name.value, val)
       return val
     }
-    case node instanceof Identifier: {
+    case node instanceof Identifier:
       return evalIdentifier(node, env)
+    case node instanceof FunctionLiteral: {
+      const params = node.parameters
+      const body = node.body
+      return new MonkeyFunction(params, body, env)
     }
+    case node instanceof CallExpression:
+      const functionObj = evalMonkey(node.function, env)
+      if (isError(functionObj)) {
+        return functionObj
+      }
+
+      const args = evalExpressions(node.arguments, env)
+      if (args.length === 1 && isError(args[0])) {
+        return args[0]
+      }
+      return applyFunction(functionObj, args)
   }
 
   return singleNull

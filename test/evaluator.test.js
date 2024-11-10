@@ -1,6 +1,6 @@
 import { Parser } from '../src/parser.js'
 import { Lexer } from '../src/lexer.js'
-import { evalMonkey, MonkeyError } from '../src/evaluator.js'
+import { evalMonkey, MonkeyError, MonkeyFunction } from '../src/evaluator.js'
 import {
   testIntegerObject,
   testBooleanObject,
@@ -204,6 +204,58 @@ function testLetStatements() {
   }
 }
 
+function testFunctionObject() {
+  const input = 'fn(x) { x + 2; };'
+  const evaluated = testEval(input)
+  if (!(evaluated instanceof MonkeyFunction)) {
+    throw new Error(
+      `object is not Function. got=${typeof evaluated} (${evaluated})`
+    )
+  }
+  const fn = evaluated
+  if (fn.parameters.length !== 1) {
+    throw new Error(
+      `function has wrong parameters. Parameters=${fn.parameters}`
+    )
+  }
+  if (fn.parameters[0].getString() !== 'x') {
+    throw new Error(`parameter is not 'x'. got=${fn.parameters[0]}`)
+  }
+  const expectedBody = '(x + 2)'
+  if (fn.body.getString() !== expectedBody) {
+    throw new Error(`body is not ${expectedBody}. got=${fn.body.toString()}`)
+  }
+}
+
+function testFunctionApplication() {
+  const tests = [
+    { input: 'let identity = fn(x) { x; }; identity(5);', expected: 5 },
+    { input: 'let identity = fn(x) { return x; }; identity(5);', expected: 5 },
+    { input: 'let double = fn(x) { x * 2; }; double(5);', expected: 10 },
+    { input: 'let add = fn(x, y) { x + y; }; add(5, 5);', expected: 10 },
+    {
+      input: 'let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));',
+      expected: 20,
+    },
+    { input: 'fn(x) { x; }(5)', expected: 5 },
+  ]
+
+  for (const test of tests) {
+    const evaluated = testEval(test.input)
+    if (!testIntegerObject(evaluated, test.expected)) {
+      return
+    }
+  }
+}
+
+function testClosures() {
+  const input = `let newAdder = fn(x) { fn(y) { x + y }; }; let addTwo = newAdder(2); addTwo(2);`
+  const evaluated = testEval(input)
+  if (!testIntegerObject(evaluated, 4)) {
+    return
+  }
+}
+
 const main = () => {
   testEvalIntegerExpression()
   testEvalBooleanExpression()
@@ -212,6 +264,9 @@ const main = () => {
   testReturnStatements()
   testErrorHandling()
   testLetStatements()
+  testFunctionObject()
+  testFunctionApplication()
+  testClosures()
 }
 
 main()
