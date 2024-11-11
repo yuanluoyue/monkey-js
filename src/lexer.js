@@ -73,6 +73,9 @@ export class Lexer {
       case '}':
         token = new Token(TokenType.RBRACE, this.ch)
         break
+      case '"':
+        token = new Token(TokenType.STRING, this.readString())
+        break
       case undefined:
         token = new Token(TokenType.EOF, '')
         break
@@ -97,7 +100,12 @@ export class Lexer {
   }
 
   skipWhitespace() {
-    while (this.ch === ' ' || this.ch === '\t' || this.ch === '\n' || this.ch === '\r') {
+    while (
+      this.ch === ' ' ||
+      this.ch === '\t' ||
+      this.ch === '\n' ||
+      this.ch === '\r'
+    ) {
       this.readChar()
     }
   }
@@ -133,6 +141,17 @@ export class Lexer {
     let start = this.position
     while (this.isDigit(this.ch)) {
       this.readChar()
+    }
+    return this.input.substring(start, this.position)
+  }
+
+  readString() {
+    let start = this.position + 1
+    while (true) {
+      this.readChar()
+      if (this.ch === '"') {
+        break
+      }
     }
     return this.input.substring(start, this.position)
   }

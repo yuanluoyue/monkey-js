@@ -33,6 +33,8 @@ export const TokenType = {
   IF: 'IF',
   ELSE: 'ELSE',
   RETURN: 'RETURN',
+
+  STRING: 'STRING',
 }
 
 const keywordIdentMap = {

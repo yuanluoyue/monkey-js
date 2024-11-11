@@ -21,6 +21,9 @@ const testNextToken = () => {
 
     10 == 10;
     10 != 9;
+
+    "foobar";
+    "foo bar";
     `
 
   const tests = [
@@ -112,6 +115,11 @@ const testNextToken = () => {
     { expectedType: TokenType.INT, expectedLiteral: '9' },
     { expectedType: TokenType.SEMICOLON, expectedLiteral: ';' },
 
+    { expectedType: TokenType.STRING, expectedLiteral: 'foobar' },
+    { expectedType: TokenType.SEMICOLON, expectedLiteral: ';' },
+
+    { expectedType: TokenType.STRING, expectedLiteral: 'foo bar' },
+    { expectedType: TokenType.SEMICOLON, expectedLiteral: ';' },
 
     { expectedType: TokenType.EOF, expectedLiteral: '' },
   ]
