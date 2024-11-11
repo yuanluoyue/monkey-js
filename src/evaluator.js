@@ -301,12 +301,31 @@ function evalIntegerInfixExpression(operator, left, right) {
   }
 }
 
-function evalInfixExpression(operator, left, right, env) {
+function evalStringInfixExpression(operator, left, right) {
+  if (operator !== TokenType.PLUS) {
+    return newMonkeyError(
+      'unknown operator: ' + left.type() + ' ' + operator + ' ' + right.type()
+    )
+  }
+
+  const leftVal = left.value
+  const rightVal = right.value
+  return new MonkeyString(leftVal + rightVal)
+}
+
+function evalInfixExpression(operator, left, right) {
   if (
     left.type() === MonkeyObjectType.INTEGER &&
     right.type() === MonkeyObjectType.INTEGER
   ) {
     return evalIntegerInfixExpression(operator, left, right)
+  }
+
+  if (
+    left.type() === MonkeyObjectType.STRING &&
+    right.type() === MonkeyObjectType.STRING
+  ) {
+    return evalStringInfixExpression(operator, left, right)
   }
 
   switch (true) {

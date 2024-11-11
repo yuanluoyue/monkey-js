@@ -176,6 +176,10 @@ function testErrorHandling() {
       input: 'foobar',
       expectedMessage: 'identifier not found: foobar',
     },
+    {
+      input: '"Hello" - "World"',
+      expectedMessage: 'unknown operator: STRING - STRING',
+    },
   ]
 
   for (const test of tests) {
@@ -277,6 +281,22 @@ function testStringLiteral() {
   }
 }
 
+function testStringConcatenation() {
+  const input = '"Hello" + " " + "World!"'
+  const evaluated = testEval(input)
+
+  if (!(evaluated instanceof MonkeyString)) {
+    throw new Error(
+      `object is not String. got=${typeof evaluated} (${evaluated})`
+    )
+  }
+
+  const str = evaluated
+  if (str.value !== 'Hello World!') {
+    throw new Error(`String has wrong value. got=${str.value}`)
+  }
+}
+
 const main = () => {
   testEvalIntegerExpression()
   testEvalBooleanExpression()
@@ -289,6 +309,7 @@ const main = () => {
   testFunctionApplication()
   testClosures()
   testStringLiteral()
+  testStringConcatenation()
 }
 
 main()
