@@ -1,6 +1,11 @@
 import { Parser } from '../src/parser.js'
 import { Lexer } from '../src/lexer.js'
-import { evalMonkey, MonkeyError, MonkeyFunction } from '../src/evaluator.js'
+import {
+  evalMonkey,
+  MonkeyError,
+  MonkeyFunction,
+  MonkeyString,
+} from '../src/evaluator.js'
 import {
   testIntegerObject,
   testBooleanObject,
@@ -256,6 +261,22 @@ function testClosures() {
   }
 }
 
+function testStringLiteral() {
+  const input = '"Hello World!"'
+  const evaluated = testEval(input)
+
+  if (!(evaluated instanceof MonkeyString)) {
+    throw new Error(
+      `object is not String. got=${typeof evaluated} (${evaluated})`
+    )
+  }
+
+  const str = evaluated
+  if (str.value !== 'Hello World!') {
+    throw new Error(`String has wrong value. got=${str.value}`)
+  }
+}
+
 const main = () => {
   testEvalIntegerExpression()
   testEvalBooleanExpression()
@@ -267,6 +288,7 @@ const main = () => {
   testFunctionObject()
   testFunctionApplication()
   testClosures()
+  testStringLiteral()
 }
 
 main()

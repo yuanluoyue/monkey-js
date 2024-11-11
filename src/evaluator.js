@@ -12,6 +12,7 @@ import {
   Identifier,
   FunctionLiteral,
   CallExpression,
+  StringLiteral,
 } from './ast.js'
 
 import { TokenType } from './token.js'
@@ -23,6 +24,7 @@ const MonkeyObjectType = {
   RETURN_VALUE: 'RETURN_VALUE',
   ERROR: 'ERROR',
   FUNCTION: 'FUNCTION',
+  STRING: 'STRING',
 }
 
 class MonkeyObject {
@@ -57,6 +59,21 @@ export class MonkeyBoolean extends MonkeyObject {
 
   type() {
     return MonkeyObjectType.BOOLEAN
+  }
+
+  inspect() {
+    return this.value.toString()
+  }
+}
+
+export class MonkeyString extends MonkeyObject {
+  constructor(value) {
+    super()
+    this.value = value
+  }
+
+  type() {
+    return MonkeyObjectType.STRING
   }
 
   inspect() {
@@ -369,6 +386,8 @@ export function evalMonkey(node, env = newEnvironment()) {
       return evalMonkey(node.expression, env)
     case node instanceof IntegerLiteral:
       return new MonkeyInteger(node.value)
+    case node instanceof StringLiteral:
+      return new MonkeyString(node.value)
     case node instanceof BooleanLiteral:
       return nativeBoolToBooleanObject(node.value)
     case node instanceof PrefixExpression:
