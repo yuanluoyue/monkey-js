@@ -12,6 +12,7 @@ import {
   BooleanLiteral,
   FunctionLiteral,
   CallExpression,
+  StringLiteral,
 } from './ast.js'
 import { TokenType } from './token.js'
 
@@ -62,6 +63,7 @@ export class Parser {
       TokenType.FUNCTION,
       this.parseFunctionLiteral.bind(this)
     )
+    this.registerPrefix(TokenType.STRING, this.parseStringLiteral.bind(this))
 
     this.registerInfix(TokenType.PLUS, this.parseInfixExpression.bind(this))
     this.registerInfix(TokenType.MINUS, this.parseInfixExpression.bind(this))
@@ -194,6 +196,10 @@ export class Parser {
 
   parseBooleanLiteral() {
     return new BooleanLiteral(this.curToken)
+  }
+
+  parseStringLiteral() {
+    return new StringLiteral(this.curToken, this.curToken.literal)
   }
 
   parseFunctionLiteral() {

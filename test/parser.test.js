@@ -2,7 +2,7 @@ import { Parser } from '../src/parser.js'
 import { Lexer } from '../src/lexer.js'
 import {
   LetStatement,
-  ReturnStatement,
+  StringLiteral,
   Identifier,
   ExpressionStatement,
   IntegerLiteral,
@@ -656,6 +656,32 @@ const testCallExpressionParsing = () => {
   testInfixExpression(exp.arguments[2], 4, '+', 5)
 }
 
+function testStringLiteralExpression() {
+  const input = '"hello world";'
+
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  const stmt = program.statements[0]
+  if (!(stmt instanceof ExpressionStatement)) {
+    console.error('First statement is not an ExpressionStatement.')
+    return
+  }
+
+  const literal = stmt.expression
+  if (!(literal instanceof StringLiteral)) {
+    console.error('Expression is not a StringLiteral.')
+    return
+  }
+
+  if (literal.value !== 'hello world') {
+    console.error(`literal.Value is not "hello world". got=${literal.value}`)
+  }
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
@@ -670,6 +696,7 @@ const main = () => {
   testFunctionLiteralParsing()
   testFunctionParameterParsing()
   testCallExpressionParsing()
+  testStringLiteralExpression()
 }
 
 main()

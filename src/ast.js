@@ -215,6 +215,24 @@ export class FunctionLiteral extends Node {
   }
 }
 
+export class StringLiteral extends Node {
+  constructor(token, value) {
+    super()
+    this.token = token
+    this.value = value
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    return this.token.literal
+  }
+}
+
 export class PrefixExpression extends Node {
   constructor(token, operator, right) {
     super()
