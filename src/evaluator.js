@@ -25,6 +25,7 @@ const MonkeyObjectType = {
   ERROR: 'ERROR',
   FUNCTION: 'FUNCTION',
   STRING: 'STRING',
+  BUILTIN: 'BUILTIN',
 }
 
 class MonkeyObject {
@@ -138,6 +139,20 @@ export class MonkeyFunction {
   }
 }
 
+class MonkeyBuiltin {
+  constructor(fn) {
+    this.fn = fn
+  }
+
+  type() {
+    return MonkeyObjectType.BUILTIN
+  }
+
+  inspect() {
+    return 'builtin function'
+  }
+}
+
 class MonkeyEnvironment {
   constructor(outer = null) {
     this.store = {}
@@ -161,6 +176,26 @@ class MonkeyEnvironment {
 const singleTrue = new MonkeyBoolean(true)
 const singleFalse = new MonkeyBoolean(false)
 const singleNull = new MonkeyNull(false)
+
+const builtins = {
+  len: new MonkeyBuiltin((arg, ...residueArgs) => {
+    if (residueArgs.length > 0) {
+      return newMonkeyError(
+        'wrong number of arguments. got=' +
+          (residueArgs.length + 1) +
+          ', want=1'
+      )
+    }
+
+    if (arg instanceof MonkeyString) {
+      return new MonkeyInteger(arg.value.length)
+    } else {
+      return newMonkeyError(
+        'argument to `len` not supported, got ' + arg.type()
+      )
+    }
+  }),
+}
 
 function newMonkeyError(format, ...a) {
   return new MonkeyError(
@@ -362,10 +397,18 @@ function evalIfExpression(ifExpression, env) {
 
 function evalIdentifier(node, env) {
   const val = env.get(node?.value)
-  if (!val) {
-    return newMonkeyError(`identifier not found: ${node?.value}`)
+
+  if (val) {
+    return val
   }
-  return val
+
+  const builtin = builtins[node?.value]
+
+  if (builtin) {
+    return builtin
+  }
+
+  return newMonkeyError(`identifier not found: ${node?.value}`)
 }
 
 function evalExpressions(expressions, env) {
@@ -388,13 +431,26 @@ function extendFunctionEnv(fn, args) {
   return env
 }
 
-function applyFunction(fn, args) {
-  if (!(fn instanceof MonkeyFunction)) {
-    return newMonkeyError(`not a function: ${fn.type}`)
+function applyFunction(fnObj, args) {
+  switch (true) {
+    case fnObj instanceof MonkeyFunction:
+      const extendedEnv = extendFunctionEnv(fnObj, args)
+      const evaluated = evalMonkey(fnObj.body, extendedEnv)
+      return unwrapReturnValue(evaluated)
+
+    case fnObj instanceof MonkeyBuiltin:
+      return fnObj.fn(...args)
+
+    default:
+      return newError('not a function: ' + fn.type())
   }
-  const extendedEnv = extendFunctionEnv(fn, args)
-  const evaluated = evalMonkey(fn.body, extendedEnv)
-  return unwrapReturnValue(evaluated)
+
+  // if (!(fn instanceof MonkeyFunction)) {
+  //   return newMonkeyError(`not a function: ${fn.type}`)
+  // }
+  // const extendedEnv = extendFunctionEnv(fn, args)
+  // const evaluated = evalMonkey(fn.body, extendedEnv)
+  // return unwrapReturnValue(evaluated)
 }
 
 export function evalMonkey(node, env = newEnvironment()) {

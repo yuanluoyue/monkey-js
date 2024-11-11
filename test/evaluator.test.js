@@ -297,6 +297,43 @@ function testStringConcatenation() {
   }
 }
 
+function testBuiltinFunctions() {
+  const tests = [
+    { input: 'len("")', expected: 0 },
+    { input: 'len("four")', expected: 4 },
+    { input: 'len("hello world")', expected: 11 },
+    {
+      input: 'len(1)',
+      expected: 'argument to `len` not supported, got INTEGER',
+    },
+    {
+      input: 'len("one", "two")',
+      expected: 'wrong number of arguments. got=2, want=1',
+    },
+  ]
+
+  for (const tt of tests) {
+    const evaluated = testEval(tt.input)
+
+    if (typeof tt.expected === 'number') {
+      testIntegerObject(evaluated, tt.expected)
+    } else if (typeof tt.expected === 'string') {
+      const errObj = evaluated
+      if (!(errObj instanceof MonkeyError)) {
+        console.error(
+          `object is not Error. got=${typeof evaluated} (${evaluated})`
+        )
+        continue
+      }
+      if (errObj.message !== tt.expected) {
+        console.error(
+          `wrong error message. expected=${tt.expected}, got=${errObj.message}`
+        )
+      }
+    }
+  }
+}
+
 const main = () => {
   testEvalIntegerExpression()
   testEvalBooleanExpression()
@@ -310,6 +347,7 @@ const main = () => {
   testClosures()
   testStringLiteral()
   testStringConcatenation()
+  testBuiltinFunctions()
 }
 
 main()
