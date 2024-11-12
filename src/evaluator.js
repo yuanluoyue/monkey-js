@@ -217,11 +217,104 @@ const builtins = {
 
     if (arg instanceof MonkeyString) {
       return new MonkeyInteger(arg.value.length)
+    } else if (arg instanceof MonkeyArray) {
+      return new MonkeyInteger(arg.elements.length)
     } else {
       return newMonkeyError(
         'argument to `len` not supported, got ' + arg.type()
       )
     }
+  }),
+
+  first: new MonkeyBuiltin((arg, ...residueArgs) => {
+    if (residueArgs.length > 0) {
+      return newMonkeyError(
+        'wrong number of arguments. got=' +
+          (residueArgs.length + 1) +
+          ', want=1'
+      )
+    }
+
+    if (arg.type() !== MonkeyObjectType.ARRAY) {
+      return newError('argument to `first` must be ARRAY, got ' + arg.type())
+    }
+
+    if (arg.elements.length > 0) {
+      return arg.elements[0]
+    }
+
+    return singleNull
+  }),
+
+  last: new MonkeyBuiltin((arg, ...residueArgs) => {
+    if (residueArgs.length > 0) {
+      return newMonkeyError(
+        'wrong number of arguments. got=' +
+          (residueArgs.length + 1) +
+          ', want=1'
+      )
+    }
+
+    if (arg.type() !== MonkeyObjectType.ARRAY) {
+      return newError('argument to `first` must be ARRAY, got ' + arg.type())
+    }
+
+    const len = arg.elements.length
+    if (len > 0) {
+      return arg.elements[len - 1]
+    }
+
+    return singleNull
+  }),
+
+  rest: new MonkeyBuiltin((arg, ...residueArgs) => {
+    if (residueArgs.length > 0) {
+      return newMonkeyError(
+        'wrong number of arguments. got=' +
+          (residueArgs.length + 1) +
+          ', want=1'
+      )
+    }
+
+    if (arg.type() !== MonkeyObjectType.ARRAY) {
+      return newError('argument to `first` must be ARRAY, got ' + arg.type())
+    }
+
+    const len = arg.elements.length
+    if (len > 0) {
+      const newElements = []
+      for (let i = 1; i < len; i++) {
+        newElements.push(arg.elements[i])
+      }
+      return new MonkeyArray(newElements)
+    }
+
+    return singleNull
+  }),
+
+  push: new MonkeyBuiltin((arg, ...residueArgs) => {
+    if (residueArgs.length > 1) {
+      return newMonkeyError(
+        'wrong number of arguments. got=' +
+          (residueArgs.length + 1) +
+          ', want=1'
+      )
+    }
+
+    if (arg.type() !== MonkeyObjectType.ARRAY) {
+      return newError('argument to `first` must be ARRAY, got ' + arg.type())
+    }
+
+    const len = arg.elements.length
+    const newElements = []
+
+    for (let i = 0; i < len; i++) {
+      newElements.push(arg.elements[i])
+    }
+
+    newElements.push(...residueArgs)
+
+    return new MonkeyArray(newElements)
   }),
 }
 
