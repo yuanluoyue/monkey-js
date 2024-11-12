@@ -13,6 +13,7 @@ import {
   CallExpression,
   ArrayLiteral,
   IndexExpression,
+  HashLiteral,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
 import {
@@ -753,6 +754,133 @@ function testParsingIndexExpressions(t) {
   }
 }
 
+function testParsingHashLiteralsStringKeys() {
+  const input = `{"one": 1, "two": 2, "three": 3}`
+
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  const stmt = program.statements[0]
+  if (!(stmt instanceof ExpressionStatement)) {
+    console.error(`exp is not ast.ExpressionStatement. got=${typeof stmt}`)
+    return
+  }
+
+  const hash = stmt.expression
+  if (!(hash instanceof HashLiteral)) {
+    console.error(`exp is not ast.HashLiteral. got=${typeof hash}`)
+    return
+  }
+
+  if (hash.pairs.size !== 3) {
+    console.error(`hash.pairs has wrong length. got=${hash.pairs.size}`)
+    return
+  }
+
+  const expected = {
+    one: 1,
+    two: 2,
+    three: 3,
+  }
+
+  for (const [key, value] of hash.pairs) {
+    const literal = key
+    if (!(literal instanceof StringLiteral)) {
+      console.error(`key is not ast.StringLiteral. got=${typeof key}`)
+      return
+    }
+
+    const expectedValue = expected[literal.value]
+
+    testIntegerLiteral(value, expectedValue)
+  }
+}
+
+function testParsingEmptyHashLiteral() {
+  const input = '{}'
+
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  const stmt = program.statements[0]
+  if (!(stmt instanceof ExpressionStatement)) {
+    console.error(`exp is not ast.ExpressionStatement. got=${typeof stmt}`)
+    return
+  }
+
+  const hash = stmt.expression
+  if (!(hash instanceof HashLiteral)) {
+    console.error(`exp is not ast.HashLiteral. got=${typeof hash}`)
+    return
+  }
+
+  if (hash.pairs.size !== 0) {
+    console.error(`hash.pairs has wrong length. got=${hash.pairs.size}`)
+    return
+  }
+}
+
+function testParsingHashLiteralsWithExpressions() {
+  const input = `{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}`
+
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  const stmt = program.statements[0]
+  if (!(stmt instanceof ExpressionStatement)) {
+    console.error(`exp is not ast.ExpressionStatement. got=${typeof stmt}`)
+    return
+  }
+
+  const hash = stmt.expression
+  if (!(hash instanceof HashLiteral)) {
+    console.error(`exp is not ast.HashLiteral. got=${typeof hash}`)
+    return
+  }
+
+  if (hash.pairs.size !== 3) {
+    console.error(`hash.pairs has wrong length. got=${hash.pairs.size}`)
+    return
+  }
+
+  const tests = {
+    one: function (e) {
+      testInfixExpression(e, 0, '+', 1)
+    },
+    two: function (e) {
+      testInfixExpression(e, 10, '-', 8)
+    },
+    three: function (e) {
+      testInfixExpression(e, 15, '/', 5)
+    },
+  }
+
+  for (const [key, value] of hash.pairs) {
+    const literal = key
+    if (!(literal instanceof StringLiteral)) {
+      console.error(`key is not ast.StringLiteral. got=${typeof key}`)
+      continue
+    }
+
+    const testFunc = tests[literal.getString()]
+    if (!testFunc) {
+      console.error(`No test function for key "${literal.string()}" found`)
+      continue
+    }
+
+    testFunc(value)
+  }
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
@@ -770,6 +898,9 @@ const main = () => {
   testStringLiteralExpression()
   testParsingArrayLiterals()
   testParsingIndexExpressions()
+  testParsingHashLiteralsStringKeys()
+  testParsingEmptyHashLiteral()
+  testParsingHashLiteralsWithExpressions()
 }
 
 main()

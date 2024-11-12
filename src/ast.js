@@ -263,6 +263,34 @@ export class ArrayLiteral extends Node {
   }
 }
 
+export class HashLiteral extends Node {
+  constructor(token) {
+    super()
+    this.token = token
+    this.pairs = new Map()
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    let out = '{"'
+
+    const pairs = []
+    for (const [key, value] of this.pairs) {
+      pairs.push(key.string() + ':' + value.string())
+    }
+
+    out += pairs.join(', ')
+    out += '"}'
+
+    return out
+  }
+}
+
 export class PrefixExpression extends Node {
   constructor(token, operator, right) {
     super()

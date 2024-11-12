@@ -18,7 +18,7 @@ export const checkParserErrors = (parser) => {
 
 export const testIntegerLiteral = (literal, value) => {
   if (!literal instanceof IntegerLiteral) {
-    throw new Error(`literal not IntegerLiteral. got=${typeof il}`)
+    throw new Error(`literal not IntegerLiteral. got=${typeof literal}`)
   }
 
   if (literal.value !== value) {

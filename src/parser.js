@@ -15,6 +15,7 @@ import {
   CallExpression,
   StringLiteral,
   ArrayLiteral,
+  HashLiteral,
 } from './ast.js'
 import { TokenType } from './token.js'
 
@@ -69,6 +70,7 @@ export class Parser {
     )
     this.registerPrefix(TokenType.STRING, this.parseStringLiteral.bind(this))
     this.registerPrefix(TokenType.LBRACKET, this.parseArrayLiteral.bind(this))
+    this.registerPrefix(TokenType.LBRACE, this.parseHashLiteral.bind(this))
 
     this.registerInfix(TokenType.PLUS, this.parseInfixExpression.bind(this))
     this.registerInfix(TokenType.MINUS, this.parseInfixExpression.bind(this))
@@ -212,6 +214,37 @@ export class Parser {
     const arr = new ArrayLiteral(this.curToken)
     arr.elements = this.parseExpressionList(TokenType.RBRACKET)
     return arr
+  }
+
+  parseHashLiteral() {
+    const hash = new HashLiteral(this.curToken)
+
+    while (!this.peekTokenIs(TokenType.RBRACE)) {
+      this.nextToken()
+      const key = this.parseExpression(LOWEST)
+
+      if (!this.expectPeek(TokenType.COLON)) {
+        return null
+      }
+
+      this.nextToken()
+      const value = this.parseExpression(LOWEST)
+
+      hash.pairs.set(key, value)
+
+      if (
+        !this.peekTokenIs(TokenType.RBRACE) &&
+        !this.expectPeek(TokenType.COMMA)
+      ) {
+        return null
+      }
+    }
+
+    if (!this.expectPeek(TokenType.RBRACE)) {
+      return null
+    }
+
+    return hash
   }
 
   parseExpressionList(end) {
