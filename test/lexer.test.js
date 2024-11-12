@@ -25,6 +25,7 @@ const testNextToken = () => {
     "foobar";
     "foo bar";
     [1, 2];
+    {"foo": "bar"};
     `
 
   const tests = [
@@ -122,13 +123,19 @@ const testNextToken = () => {
     { expectedType: TokenType.STRING, expectedLiteral: 'foo bar' },
     { expectedType: TokenType.SEMICOLON, expectedLiteral: ';' },
 
-    { expectedType: TokenType.LBRACKET, expectedLiteral: "[" },
-    { expectedType: TokenType.INT, expectedLiteral: "1" },
-    { expectedType: TokenType.COMMA, expectedLiteral: "," },
-    { expectedType: TokenType.INT, expectedLiteral: "2" },
-    { expectedType: TokenType.RBRACKET, expectedLiteral: "]" },
-    { expectedType: TokenType.SEMICOLON, expectedLiteral: ";" },
-    { expectedType: TokenType.EOF, expectedLiteral: "" },
+    { expectedType: TokenType.LBRACKET, expectedLiteral: '[' },
+    { expectedType: TokenType.INT, expectedLiteral: '1' },
+    { expectedType: TokenType.COMMA, expectedLiteral: ',' },
+    { expectedType: TokenType.INT, expectedLiteral: '2' },
+    { expectedType: TokenType.RBRACKET, expectedLiteral: ']' },
+    { expectedType: TokenType.SEMICOLON, expectedLiteral: ';' },
+
+    { expectedType: TokenType.LBRACE, expectedLiteral: '{' },
+    { expectedType: TokenType.STRING, expectedLiteral: 'foo' },
+    { expectedType: TokenType.COLON, expectedLiteral: ':' },
+    { expectedType: TokenType.STRING, expectedLiteral: 'bar' },
+    { expectedType: TokenType.RBRACE, expectedLiteral: '}' },
+    { expectedType: TokenType.SEMICOLON, expectedLiteral: ';' },
 
     { expectedType: TokenType.EOF, expectedLiteral: '' },
   ]
@@ -140,11 +147,15 @@ const testNextToken = () => {
     const testCase = tests[i]
 
     if (token.type !== testCase.expectedType) {
-      throw new Error(`tests[${i}] - tokentype wrong. expected=${testCase.expectedType}, got=${token.type}`)
+      throw new Error(
+        `tests[${i}] - tokentype wrong. expected=${testCase.expectedType}, got=${token.type}`
+      )
     }
 
     if (token.literal !== testCase.expectedLiteral) {
-      throw new Error(`tests[${i}] - literal wrong. expected=${testCase.expectedLiteral}, got=${token.literal}`)
+      throw new Error(
+        `tests[${i}] - literal wrong. expected=${testCase.expectedLiteral}, got=${token.literal}`
+      )
     }
   }
 }

@@ -38,6 +38,8 @@ export const TokenType = {
 
   LBRACKET: '[',
   RBRACKET: ']',
+
+  COLON: ':',
 }
 
 const keywordIdentMap = {
