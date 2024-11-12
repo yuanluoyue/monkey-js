@@ -13,6 +13,7 @@ import {
   FunctionLiteral,
   CallExpression,
   StringLiteral,
+  ArrayLiteral,
 } from './ast.js'
 
 import { TokenType } from './token.js'
@@ -26,6 +27,7 @@ const MonkeyObjectType = {
   FUNCTION: 'FUNCTION',
   STRING: 'STRING',
   BUILTIN: 'BUILTIN',
+  ARRAY: 'ARRAY',
 }
 
 class MonkeyObject {
@@ -135,6 +137,31 @@ export class MonkeyFunction {
       params.push(p.getString())
     }
     let out = `fn(${params.join(', ')}) {\n${this.body.getString()}\n}`
+    return out
+  }
+}
+
+export class MonkeyArray {
+  constructor(elements) {
+    this.elements = elements
+  }
+
+  type() {
+    return MonkeyObjectType.ARRAY
+  }
+
+  inspect() {
+    let out = ''
+
+    const elementsStr = []
+    for (const e of this.elements) {
+      elementsStr.push(e.inspect())
+    }
+
+    out += '['
+    out += elementsStr.join(', ')
+    out += ']'
+
     return out
   }
 }
@@ -519,6 +546,12 @@ export function evalMonkey(node, env = newEnvironment()) {
         return args[0]
       }
       return applyFunction(functionObj, args)
+    case node instanceof ArrayLiteral:
+      const elements = evalExpressions(node.elements, env)
+      if (elements.length === 1 && isError(elements[0])) {
+        return elements[0]
+      }
+      return new MonkeyArray(elements)
   }
 
   return singleNull

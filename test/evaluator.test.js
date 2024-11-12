@@ -5,6 +5,7 @@ import {
   MonkeyError,
   MonkeyFunction,
   MonkeyString,
+  MonkeyArray,
 } from '../src/evaluator.js'
 import {
   testIntegerObject,
@@ -334,6 +335,28 @@ function testBuiltinFunctions() {
   }
 }
 
+function testArrayLiterals() {
+  const input = '[1, 2 * 2, 3 + 3]'
+
+  const evaluated = testEval(input)
+  const result = evaluated
+  if (!(result instanceof MonkeyArray)) {
+    console.error(`object is not Array. got=${typeof evaluated} (${evaluated})`)
+    return
+  }
+
+  if (result.elements.length !== 3) {
+    console.error(
+      `array has wrong num of elements. got=${result.elements.length}`
+    )
+    return
+  }
+
+  testIntegerObject(result.elements[0], 1)
+  testIntegerObject(result.elements[1], 4)
+  testIntegerObject(result.elements[2], 6)
+}
+
 const main = () => {
   testEvalIntegerExpression()
   testEvalBooleanExpression()
@@ -348,6 +371,7 @@ const main = () => {
   testStringLiteral()
   testStringConcatenation()
   testBuiltinFunctions()
+  testArrayLiterals()
 }
 
 main()
