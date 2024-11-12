@@ -35,6 +35,9 @@ export const TokenType = {
   RETURN: 'RETURN',
 
   STRING: 'STRING',
+
+  LBRACKET: '[',
+  RBRACKET: ']',
 }
 
 const keywordIdentMap = {

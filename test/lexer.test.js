@@ -24,6 +24,7 @@ const testNextToken = () => {
 
     "foobar";
     "foo bar";
+    [1, 2];
     `
 
   const tests = [
@@ -120,6 +121,14 @@ const testNextToken = () => {
 
     { expectedType: TokenType.STRING, expectedLiteral: 'foo bar' },
     { expectedType: TokenType.SEMICOLON, expectedLiteral: ';' },
+
+    { expectedType: TokenType.LBRACKET, expectedLiteral: "[" },
+    { expectedType: TokenType.INT, expectedLiteral: "1" },
+    { expectedType: TokenType.COMMA, expectedLiteral: "," },
+    { expectedType: TokenType.INT, expectedLiteral: "2" },
+    { expectedType: TokenType.RBRACKET, expectedLiteral: "]" },
+    { expectedType: TokenType.SEMICOLON, expectedLiteral: ";" },
+    { expectedType: TokenType.EOF, expectedLiteral: "" },
 
     { expectedType: TokenType.EOF, expectedLiteral: '' },
   ]
