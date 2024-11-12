@@ -14,6 +14,7 @@ import {
   CallExpression,
   StringLiteral,
   ArrayLiteral,
+  IndexExpression,
 } from './ast.js'
 
 import { TokenType } from './token.js'
@@ -471,13 +472,29 @@ function applyFunction(fnObj, args) {
     default:
       return newError('not a function: ' + fn.type())
   }
+}
 
-  // if (!(fn instanceof MonkeyFunction)) {
-  //   return newMonkeyError(`not a function: ${fn.type}`)
-  // }
-  // const extendedEnv = extendFunctionEnv(fn, args)
-  // const evaluated = evalMonkey(fn.body, extendedEnv)
-  // return unwrapReturnValue(evaluated)
+function evalArrayIndexExpression(array, index) {
+  const arrayObject = array
+  const idx = index.value
+  const max = arrayObject.elements.length - 1
+
+  if (idx < 0 || idx > max) {
+    return singleNull
+  }
+
+  return arrayObject.elements[idx]
+}
+
+function evalIndexExpression(left, index) {
+  if (
+    left.type() === MonkeyObjectType.ARRAY &&
+    index.type() === MonkeyObjectType.INTEGER
+  ) {
+    return evalArrayIndexExpression(left, index)
+  } else {
+    return newError('index operator not supported: ' + left.type())
+  }
 }
 
 export function evalMonkey(node, env = newEnvironment()) {
@@ -552,6 +569,16 @@ export function evalMonkey(node, env = newEnvironment()) {
         return elements[0]
       }
       return new MonkeyArray(elements)
+    case node instanceof IndexExpression:
+      const left = evalMonkey(node.left, env)
+      if (isError(left)) {
+        return left
+      }
+      const index = evalMonkey(node.index, env)
+      if (isError(index)) {
+        return index
+      }
+      return evalIndexExpression(left, index)
   }
 
   return singleNull
