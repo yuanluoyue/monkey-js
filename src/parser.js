@@ -6,6 +6,7 @@ import {
   ExpressionStatement,
   BlockStatement,
   IntegerLiteral,
+  IndexExpression,
   PrefixExpression,
   InfixExpression,
   IfExpression,
@@ -25,6 +26,7 @@ const SUM = 4
 const PRODUCT = 5
 const PREFIX = 6
 const CALL = 7
+const INDEX = 8
 
 const precedencesMap = {
   [TokenType.EQ]: EQUALS,
@@ -36,6 +38,7 @@ const precedencesMap = {
   [TokenType.SLASH]: PRODUCT,
   [TokenType.ASTERISK]: PRODUCT,
   [TokenType.LPAREN]: CALL,
+  [TokenType.LBRACKET]: INDEX,
 }
 
 export class Parser {
@@ -76,6 +79,7 @@ export class Parser {
     this.registerInfix(TokenType.LT, this.parseInfixExpression.bind(this))
     this.registerInfix(TokenType.GT, this.parseInfixExpression.bind(this))
     this.registerInfix(TokenType.LPAREN, this.parseCallExpression.bind(this))
+    this.registerInfix(TokenType.LBRACKET, this.parseIndexExpression.bind(this))
 
     this.nextToken()
     this.nextToken()
@@ -351,6 +355,20 @@ export class Parser {
     }
 
     return args
+  }
+
+  parseIndexExpression(left) {
+    const expression = new IndexExpression(this.curToken, left)
+
+    this.nextToken()
+
+    expression.index = this.parseExpression(LOWEST)
+
+    if (!this.expectPeek(TokenType.RBRACKET)) {
+      return null
+    }
+
+    return expression
   }
 
   parsePrefixExpression() {

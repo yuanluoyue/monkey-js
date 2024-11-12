@@ -12,6 +12,7 @@ import {
   FunctionLiteral,
   CallExpression,
   ArrayLiteral,
+  IndexExpression,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
 import {
@@ -396,6 +397,14 @@ const testOperatorPrecedenceParsing = () => {
       input: 'add(a + b + c * d / f + g)',
       expected: 'add((((a + b) + ((c * d) / f)) + g))',
     },
+    {
+      input: 'a * [1, 2, 3, 4][b * c] * d',
+      expected: '((a * ([1, 2, 3, 4][(b * c)])) * d)',
+    },
+    {
+      input: 'add(a * b[2], b[1], 2 * [1, 2][1])',
+      expected: 'add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))',
+    },
   ]
 
   for (const testCase of tests) {
@@ -407,6 +416,7 @@ const testOperatorPrecedenceParsing = () => {
 
     const actual = program.getString()
     if (actual !== testCase.expected) {
+      console.log(program)
       throw new Error(`expected=${testCase.expected}, got=${actual}`)
     }
   }
@@ -714,6 +724,35 @@ function testParsingArrayLiterals() {
   testInfixExpression(array.elements[2], 3, '+', 3)
 }
 
+function testParsingIndexExpressions(t) {
+  const input = 'myArray[1 + 1]'
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  const stmt = program.statements[0]
+  if (!(stmt instanceof ExpressionStatement)) {
+    console.error(`exp not ast.ExpressionStatement. got=${typeof stmt}`)
+    return
+  }
+
+  const indexExp = stmt.expression
+  if (!(indexExp instanceof IndexExpression)) {
+    console.error(`exp not ast.IndexExpression. got=${typeof indexExp}`)
+    return
+  }
+
+  if (!testIdentifier(indexExp.left, 'myArray')) {
+    return
+  }
+
+  if (!testInfixExpression(indexExp.index, 1, '+', 1)) {
+    return
+  }
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
@@ -730,6 +769,7 @@ const main = () => {
   testCallExpressionParsing()
   testStringLiteralExpression()
   testParsingArrayLiterals()
+  testParsingIndexExpressions()
 }
 
 main()

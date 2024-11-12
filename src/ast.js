@@ -246,13 +246,13 @@ export class ArrayLiteral extends Node {
     return this.token.literal
   }
 
-  string() {
+  getString() {
     let out = ''
 
     const elementsStr = []
 
     for (const el of this.elements) {
-      elementsStr.push(el.toString())
+      elementsStr.push(el.getString())
     }
 
     out += '['
@@ -363,6 +363,32 @@ export class CallExpression extends Node {
     out += '('
     out += args.join(', ')
     out += ')'
+    return out
+  }
+}
+
+export class IndexExpression extends Node {
+  constructor(token, left, index) {
+    super()
+    this.token = token
+    this.left = left
+    this.index = index
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    let out = '('
+
+    out += this.left.getString()
+    out += '['
+    out += this.index.getString()
+    out += '])'
+
     return out
   }
 }
