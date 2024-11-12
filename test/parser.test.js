@@ -11,6 +11,7 @@ import {
   BooleanLiteral,
   FunctionLiteral,
   CallExpression,
+  ArrayLiteral,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
 import {
@@ -682,6 +683,37 @@ function testStringLiteralExpression() {
   }
 }
 
+function testParsingArrayLiterals() {
+  const input = '[1, 2 * 2, 3 + 3]'
+
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  const stmt = program.statements[0]
+  if (!(stmt instanceof ExpressionStatement)) {
+    console.error(`exp not ast.ExpressionStatement. got=${typeof stmt}`)
+    return
+  }
+
+  const array = stmt.expression
+  if (!(array instanceof ArrayLiteral)) {
+    console.error(`exp not ast.ArrayLiteral. got=${typeof array}`)
+    return
+  }
+
+  if (array.elements.length !== 3) {
+    console.error(`len(array.elements) not 3. got=${array.elements.length}`)
+    return
+  }
+
+  testIntegerLiteral(array.elements[0], 1)
+  testInfixExpression(array.elements[1], 2, '*', 2)
+  testInfixExpression(array.elements[2], 3, '+', 3)
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
@@ -697,6 +729,7 @@ const main = () => {
   testFunctionParameterParsing()
   testCallExpressionParsing()
   testStringLiteralExpression()
+  testParsingArrayLiterals()
 }
 
 main()

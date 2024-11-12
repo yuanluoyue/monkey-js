@@ -233,6 +233,36 @@ export class StringLiteral extends Node {
   }
 }
 
+export class ArrayLiteral extends Node {
+  constructor(token, elements) {
+    super()
+    this.token = token
+    this.elements = elements
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  string() {
+    let out = ''
+
+    const elementsStr = []
+
+    for (const el of this.elements) {
+      elementsStr.push(el.toString())
+    }
+
+    out += '['
+    out += elementsStr.join(', ')
+    out += ']'
+
+    return out
+  }
+}
+
 export class PrefixExpression extends Node {
   constructor(token, operator, right) {
     super()

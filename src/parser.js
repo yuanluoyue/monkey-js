@@ -13,6 +13,7 @@ import {
   FunctionLiteral,
   CallExpression,
   StringLiteral,
+  ArrayLiteral,
 } from './ast.js'
 import { TokenType } from './token.js'
 
@@ -64,6 +65,7 @@ export class Parser {
       this.parseFunctionLiteral.bind(this)
     )
     this.registerPrefix(TokenType.STRING, this.parseStringLiteral.bind(this))
+    this.registerPrefix(TokenType.LBRACKET, this.parseArrayLiteral.bind(this))
 
     this.registerInfix(TokenType.PLUS, this.parseInfixExpression.bind(this))
     this.registerInfix(TokenType.MINUS, this.parseInfixExpression.bind(this))
@@ -202,6 +204,36 @@ export class Parser {
     return new StringLiteral(this.curToken, this.curToken.literal)
   }
 
+  parseArrayLiteral() {
+    const arr = new ArrayLiteral(this.curToken)
+    arr.elements = this.parseExpressionList(TokenType.RBRACKET)
+    return arr
+  }
+
+  parseExpressionList(end) {
+    const list = []
+
+    if (this.peekTokenIs(end)) {
+      this.nextToken()
+      return list
+    }
+
+    this.nextToken()
+    list.push(this.parseExpression(LOWEST))
+
+    while (this.peekTokenIs(TokenType.COMMA)) {
+      this.nextToken()
+      this.nextToken()
+      list.push(this.parseExpression(LOWEST))
+    }
+
+    if (!this.expectPeek(end)) {
+      return null
+    }
+
+    return list
+  }
+
   parseFunctionLiteral() {
     const literal = new FunctionLiteral(this.curToken)
 
@@ -293,7 +325,7 @@ export class Parser {
 
   parseCallExpression(functionExpression) {
     const expression = new CallExpression(this.curToken, functionExpression)
-    expression.arguments = this.parseCallArguments()
+    expression.arguments = this.parseExpressionList(TokenType.RPAREN)
     return expression
   }
 
