@@ -208,7 +208,8 @@ export class MonkeyHash {
     const elementsStr = []
     for (const key in this.pairs) {
       const keyObj = JSON.parse(key)
-      elementsStr.push(`${keyObj.value}: ${this.pairs[key]}`)
+
+      elementsStr.push(`${keyObj.value}: ${this.pairs[key].inspect()}`)
     }
 
     out += '{'
@@ -631,14 +632,39 @@ function evalArrayIndexExpression(array, index) {
   return arrayObject.elements[idx]
 }
 
+function evalHashIndexExpression(hash, index) {
+  const hashObject = hash
+
+  if (
+    !(
+      index instanceof MonkeyString ||
+      index instanceof MonkeyBoolean ||
+      index instanceof MonkeyInteger
+    )
+  ) {
+    return newMonkeyError('unusable as hash key: ' + index.type())
+  }
+
+  const key = index
+  const pair = hashObject.pairs[key.hashKey()]
+
+  if (!pair) {
+    return singleNull
+  }
+
+  return pair
+}
+
 function evalIndexExpression(left, index) {
   if (
     left.type() === MonkeyObjectType.ARRAY &&
     index.type() === MonkeyObjectType.INTEGER
   ) {
     return evalArrayIndexExpression(left, index)
+  } else if (left.type() === MonkeyObjectType.HASH) {
+    return evalHashIndexExpression(left, index)
   } else {
-    return newError('index operator not supported: ' + left.type())
+    return newMonkeyError('index operator not supported: ' + left.type())
   }
 }
 
