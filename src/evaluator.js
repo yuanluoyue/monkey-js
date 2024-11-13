@@ -369,6 +369,13 @@ const builtins = {
 
     return new MonkeyArray(newElements)
   }),
+
+  puts: new MonkeyBuiltin((...args) => {
+    for (let arg of args) {
+      console.log(arg.inspect())
+    }
+    return singleNull
+  }),
 }
 
 function newMonkeyError(format, ...a) {
