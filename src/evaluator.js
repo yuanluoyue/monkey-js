@@ -15,6 +15,7 @@ import {
   StringLiteral,
   ArrayLiteral,
   IndexExpression,
+  HashLiteral,
 } from './ast.js'
 
 import { TokenType } from './token.js'
@@ -29,6 +30,7 @@ const MonkeyObjectType = {
   STRING: 'STRING',
   BUILTIN: 'BUILTIN',
   ARRAY: 'ARRAY',
+  HASH: 'HASH',
 }
 
 class MonkeyObject {
@@ -53,6 +55,14 @@ export class MonkeyInteger extends MonkeyObject {
   inspect() {
     return this.value.toString()
   }
+
+  hashKey() {
+    const hash = {
+      type: this.type(),
+      value: this.value,
+    }
+    return JSON.stringify(hash)
+  }
 }
 
 export class MonkeyBoolean extends MonkeyObject {
@@ -68,6 +78,14 @@ export class MonkeyBoolean extends MonkeyObject {
   inspect() {
     return this.value.toString()
   }
+
+  hashKey() {
+    const hash = {
+      type: this.type(),
+      value: this.value,
+    }
+    return JSON.stringify(hash)
+  }
 }
 
 export class MonkeyString extends MonkeyObject {
@@ -82,6 +100,14 @@ export class MonkeyString extends MonkeyObject {
 
   inspect() {
     return this.value.toString()
+  }
+
+  hashKey() {
+    const hash = {
+      type: this.type(),
+      value: this.value,
+    }
+    return JSON.stringify(hash)
   }
 }
 
@@ -162,6 +188,32 @@ export class MonkeyArray {
     out += '['
     out += elementsStr.join(', ')
     out += ']'
+
+    return out
+  }
+}
+
+export class MonkeyHash {
+  constructor(pairs) {
+    this.pairs = pairs
+  }
+
+  type() {
+    return MonkeyObjectType.HASH
+  }
+
+  inspect() {
+    let out = ''
+
+    const elementsStr = []
+    for (const key in this.pairs) {
+      const keyObj = JSON.parse(key)
+      elementsStr.push(`${keyObj.value}: ${this.pairs[key]}`)
+    }
+
+    out += '{'
+    out += elementsStr.join(', ')
+    out += '}'
 
     return out
   }
@@ -590,6 +642,26 @@ function evalIndexExpression(left, index) {
   }
 }
 
+function evalHashLiteral(node, env) {
+  const pairs = {}
+  for (let [keyNode, valueNode] of node.pairs) {
+    const key = evalMonkey(keyNode, env)
+    if (isError(key)) {
+      return key
+    }
+
+    const value = evalMonkey(valueNode, env)
+    if (isError(value)) {
+      return value
+    }
+
+    let hashed = key.hashKey()
+    pairs[hashed] = value
+  }
+
+  return new MonkeyHash(pairs)
+}
+
 export function evalMonkey(node, env = newEnvironment()) {
   switch (true) {
     case node instanceof Program:
@@ -672,6 +744,8 @@ export function evalMonkey(node, env = newEnvironment()) {
         return index
       }
       return evalIndexExpression(left, index)
+    case node instanceof HashLiteral:
+      return evalHashLiteral(node, env)
   }
 
   return singleNull

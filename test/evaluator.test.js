@@ -6,6 +6,9 @@ import {
   MonkeyFunction,
   MonkeyString,
   MonkeyArray,
+  MonkeyHash,
+  MonkeyInteger,
+  MonkeyBoolean,
 } from '../src/evaluator.js'
 import {
   testIntegerObject,
@@ -411,6 +414,81 @@ function testArrayIndexExpressions() {
   }
 }
 
+function testStringHashKey() {
+  // 为了解决这个问题，理论上 monkeyString 应该指向同一个
+  // const name1 = new MonkeyString('name')
+  // const name2 = new MonkeyString('name')
+  // const monkey = new MonkeyString('monkey')
+  // const pairs = new Map()
+  // pairs.set(name1, monkey)
+  // pairs.get(name1) // monkey
+  // pairs.get(name2) // null
+  // name1 === name2 // false
+
+  const hello1 = new MonkeyString('Hello World')
+  const hello2 = new MonkeyString('Hello World')
+  const diff1 = new MonkeyString('My name is johnny')
+  const diff2 = new MonkeyString('My name is johnny')
+
+  if (hello1.hashKey() !== hello2.hashKey()) {
+    console.error('strings with same content have different hash keys')
+  }
+
+  if (diff1.hashKey() !== diff2.hashKey()) {
+    console.error('strings with same content have different hash keys')
+  }
+
+  if (hello1.hashKey() === diff1.hashKey()) {
+    console.error('strings with different content have same hash keys')
+  }
+}
+
+function testHashLiterals() {
+  const input = `let two = "two";
+  {
+      "one": 10 - 9,
+      two: 1 + 1,
+      "thr" + "ee": 6 / 2,
+      4: 4,
+      true: 5,
+      false: 6
+  }`
+
+  const evaluated = testEval(input)
+  const result = evaluated
+  if (!(result instanceof MonkeyHash)) {
+    console.error(
+      `Eval didn't return Hash. got=${typeof evaluated} (${evaluated})`
+    )
+    return
+  }
+
+  const expected = {
+    [new MonkeyString('one').hashKey()]: 1,
+    [new MonkeyString('two').hashKey()]: 2,
+    [new MonkeyString('three').hashKey()]: 3,
+    [new MonkeyInteger(4).hashKey()]: 4,
+    [new MonkeyBoolean(true).hashKey()]: 5,
+    [new MonkeyBoolean(false).hashKey()]: 6,
+  }
+
+  if (Object.keys(result.pairs).length !== Object.keys(expected).length) {
+    console.error(
+      `Hash has wrong num of pairs. got=${Object.keys(result.pairs).length}`
+    )
+    return
+  }
+
+  for (const expectedKey in expected) {
+    const pair = result.pairs[expectedKey]
+    if (!pair) {
+      console.error(`no pair for given key in Pairs`)
+    }
+
+    testIntegerObject(pair, expected[expectedKey])
+  }
+}
+
 const main = () => {
   testEvalIntegerExpression()
   testEvalBooleanExpression()
@@ -427,6 +505,8 @@ const main = () => {
   testBuiltinFunctions()
   testArrayLiterals()
   testArrayIndexExpressions()
+  testStringHashKey()
+  testHashLiterals()
 }
 
 main()
