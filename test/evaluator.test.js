@@ -1,7 +1,6 @@
 import { Parser } from '../src/parser.js'
 import { Lexer } from '../src/lexer.js'
 import {
-  evalMonkey,
   MonkeyError,
   MonkeyFunction,
   MonkeyString,
@@ -9,7 +8,8 @@ import {
   MonkeyHash,
   MonkeyInteger,
   MonkeyBoolean,
-} from '../src/evaluator.js'
+} from '../src/object.js'
+import { evalMonkey } from '../src/evaluator.js'
 import {
   testIntegerObject,
   testBooleanObject,

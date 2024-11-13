@@ -4,7 +4,7 @@ import {
   BooleanLiteral,
   Identifier,
 } from '../src/ast.js'
-import { MonkeyInteger, MonkeyBoolean, MonkeyNull } from '../src/evaluator.js'
+import { MonkeyInteger, MonkeyBoolean, MonkeyNull } from '../src/object.js'
 
 export const checkParserErrors = (parser) => {
   const errors = parser.getErrors()
