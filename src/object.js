@@ -9,6 +9,7 @@ export const MonkeyObjectType = {
   BUILTIN: 'BUILTIN',
   ARRAY: 'ARRAY',
   HASH: 'HASH',
+  QUOTE: 'QUOTE',
 }
 
 class MonkeyObject {
@@ -229,5 +230,19 @@ export class MonkeyEnvironment {
   set(name, val) {
     this.store[name] = val
     return val
+  }
+}
+
+export class Quote {
+  constructor(node) {
+    this.node = node
+  }
+
+  type() {
+    return MonkeyObjectType.QUOTE
+  }
+
+  inspect() {
+    return `QUOTE(${this.node.getString()})`
   }
 }

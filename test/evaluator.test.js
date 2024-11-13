@@ -8,6 +8,7 @@ import {
   MonkeyHash,
   MonkeyInteger,
   MonkeyBoolean,
+  Quote,
 } from '../src/object.js'
 import { evalMonkey } from '../src/evaluator.js'
 import {
@@ -535,6 +536,49 @@ function testHashIndexExpressions() {
   }
 }
 
+function testQuote() {
+  const tests = [
+    {
+      input: 'quote(5)',
+      expected: '5',
+    },
+    {
+      input: 'quote(5 + 8)',
+      expected: '(5 + 8)',
+    },
+    {
+      input: 'quote(foobar)',
+      expected: 'foobar',
+    },
+    {
+      input: 'quote(foobar + barfoo)',
+      expected: '(foobar + barfoo)',
+    },
+  ]
+
+  for (let tt of tests) {
+    const evaluated = testEval(tt.input)
+    const quote = evaluated
+    if (!(quote instanceof Quote)) {
+      console.error(
+        `expected *object.Quote. got=${typeof evaluated} (${evaluated})`
+      )
+      return
+    }
+
+    if (!quote.node) {
+      console.error('quote.Node is nil')
+      return
+    }
+
+    if (quote.node.getString() !== tt.expected) {
+      console.error(
+        `not equal. got=${quote.node.getString()}, want=${tt.expected}`
+      )
+    }
+  }
+}
+
 const main = () => {
   testEvalIntegerExpression()
   testEvalBooleanExpression()
@@ -554,6 +598,8 @@ const main = () => {
   testStringHashKey()
   testHashLiterals()
   testHashIndexExpressions()
+
+  testQuote()
 }
 
 main()
