@@ -1,3 +1,5 @@
+import { Parser } from '../src/parser.js'
+import { Lexer } from '../src/lexer.js'
 import {
   InfixExpression,
   IntegerLiteral,
@@ -5,6 +7,7 @@ import {
   Identifier,
 } from '../src/ast.js'
 import { MonkeyInteger, MonkeyBoolean, MonkeyNull } from '../src/object.js'
+import { evalMonkey } from '../src/evaluator.js'
 
 export const checkParserErrors = (parser) => {
   const errors = parser.getErrors()
@@ -148,4 +151,11 @@ export const testNullObject = (obj) => {
     throw new Error(`object is not NULL. got=${typeof obj} (${obj})`)
   }
   return true
+}
+
+export const testEval = (input) => {
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+  return evalMonkey(program)
 }

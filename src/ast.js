@@ -17,10 +17,9 @@ class Node {
 }
 
 export class Program extends Node {
-  statements = []
-
-  constructor() {
+  constructor(statements) {
     super()
+    this.statements = statements || []
   }
 
   tokenLiteral() {
@@ -131,11 +130,10 @@ export class ExpressionStatement extends Node {
 }
 
 export class BlockStatement extends Node {
-  statements = []
-
-  constructor(token) {
+  constructor(token, statements) {
     super()
     this.token = token
+    this.statements = statements || []
   }
 
   statementNode() {}
@@ -264,10 +262,10 @@ export class ArrayLiteral extends Node {
 }
 
 export class HashLiteral extends Node {
-  constructor(token) {
+  constructor(token, pairs) {
     super()
     this.token = token
-    this.pairs = new Map()
+    this.pairs = pairs || new Map()
   }
 
   expressionNode() {}
@@ -419,4 +417,52 @@ export class IndexExpression extends Node {
 
     return out
   }
+}
+
+export function modify(node, modifier) {
+  if (node instanceof Program) {
+    for (let i = 0; i < node.statements.length; i++) {
+      const statement = node.statements[i]
+      node.statements[i] = modify(statement, modifier)
+    }
+  } else if (node instanceof ExpressionStatement) {
+    node.expression = modify(node.expression, modifier)
+  } else if (node instanceof InfixExpression) {
+    node.left = modify(node.left, modifier)
+    node.right = modify(node.right, modifier)
+  } else if (node instanceof PrefixExpression) {
+    node.right = modify(node.right, modifier)
+  } else if (node instanceof IndexExpression) {
+    node.left = modify(node.left, modifier)
+    node.index = modify(node.index, modifier)
+  } else if (node instanceof IfExpression) {
+    node.condition = modify(node.condition, modifier)
+    node.consequence = modify(node.consequence, modifier)
+    if (node?.alternative?.token) {
+      node.alternative = modify(node.alternative, modifier)
+    }
+  } else if (node instanceof BlockStatement) {
+    for (let i = 0; i < node.statements.length; i++) {
+      const statement = node.statements[i]
+      node.statements[i] = modify(statement, modifier)
+    }
+  } else if (node instanceof ReturnStatement) {
+    node.returnValue = modify(node.returnValue, modifier)
+  } else if (node instanceof LetStatement) {
+    node.value = modify(node.value, modifier)
+  } else if (node instanceof FunctionLiteral) {
+    node.body = modify(node.body, modifier)
+  } else if (node instanceof ArrayLiteral) {
+    for (let i = 0; i < node.elements.length; i++) {
+      const element = node.elements[i]
+      node.elements[i] = modify(element, modifier)
+    }
+  } else if (node instanceof HashLiteral) {
+    for (let [keyNode, valueNode] of node.pairs) {
+      modifier(keyNode)
+      modifier(valueNode)
+    }
+  }
+
+  return modifier(node)
 }
