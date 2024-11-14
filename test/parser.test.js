@@ -14,6 +14,7 @@ import {
   ArrayLiteral,
   IndexExpression,
   HashLiteral,
+  MacroLiteral,
 } from '../src/ast.js'
 import { TokenType } from '../src/token.js'
 import {
@@ -881,6 +882,60 @@ function testParsingHashLiteralsWithExpressions() {
   }
 }
 
+function testMacroLiteralParsing() {
+  const input = `macro(x, y) { x + y; }`
+
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  if (program.statements.length !== 1) {
+    console.error(
+      `program.Statements does not contain 1 statement. got=${program.statements.length}`
+    )
+  }
+
+  const stmt = program.statements[0]
+  if (!(stmt instanceof ExpressionStatement)) {
+    console.error(
+      `statement is not ast.ExpressionStatement. got=${typeof stmt}`
+    )
+  }
+
+  const macro = stmt.expression
+  if (!(macro instanceof MacroLiteral)) {
+    console.error(
+      `stmt.Expression is not ast.MacroLiteral. got=${typeof macro}`
+    )
+  }
+
+  if (macro.parameters.length !== 2) {
+    console.error(
+      `macro literal parameters wrong. want 2, got=${macro.parameters.length}`
+    )
+  }
+
+  testLiteralExpression(macro.parameters[0], 'x')
+  testLiteralExpression(macro.parameters[1], 'y')
+
+  if (macro.body.statements.length !== 1) {
+    console.error(
+      `macro.Body.Statements has not 1 statement. got=${macro.body.statements.length}`
+    )
+  }
+
+  const bodyStmt = macro.body.statements[0]
+  if (!(bodyStmt instanceof ExpressionStatement)) {
+    console.error(
+      `macro body stmt is not ast.ExpressionStatement. got=${typeof bodyStmt}`
+    )
+  }
+
+  testInfixExpression(bodyStmt.expression, 'x', '+', 'y')
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
@@ -901,6 +956,7 @@ const main = () => {
   testParsingHashLiteralsStringKeys()
   testParsingEmptyHashLiteral()
   testParsingHashLiteralsWithExpressions()
+  testMacroLiteralParsing()
 }
 
 main()

@@ -16,6 +16,7 @@ import {
   StringLiteral,
   ArrayLiteral,
   HashLiteral,
+  MacroLiteral,
 } from './ast.js'
 import { TokenType } from './token.js'
 
@@ -71,6 +72,7 @@ export class Parser {
     this.registerPrefix(TokenType.STRING, this.parseStringLiteral.bind(this))
     this.registerPrefix(TokenType.LBRACKET, this.parseArrayLiteral.bind(this))
     this.registerPrefix(TokenType.LBRACE, this.parseHashLiteral.bind(this))
+    this.registerPrefix(TokenType.MACRO, this.parseMacroLiteral.bind(this))
 
     this.registerInfix(TokenType.PLUS, this.parseInfixExpression.bind(this))
     this.registerInfix(TokenType.MINUS, this.parseInfixExpression.bind(this))
@@ -245,6 +247,24 @@ export class Parser {
     }
 
     return hash
+  }
+
+  parseMacroLiteral() {
+    const literal = new MacroLiteral(this.curToken)
+
+    if (!this.expectPeek(TokenType.LPAREN)) {
+      return null
+    }
+
+    literal.parameters = this.parseFunctionParameters()
+
+    if (!this.expectPeek(TokenType.LBRACE)) {
+      return null
+    }
+
+    literal.body = this.parseBlockStatement()
+
+    return literal
   }
 
   parseExpressionList(end) {

@@ -418,3 +418,34 @@ export class IndexExpression extends Node {
     return out
   }
 }
+
+export class MacroLiteral {
+  constructor(token, parameters, body) {
+    this.token = token
+    this.parameters = parameters
+    this.body = body
+  }
+
+  expressionNode() {}
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+
+  getString() {
+    let out = ''
+
+    let params = []
+    for (let p of this.parameters) {
+      params.push(p.getString())
+    }
+
+    out += this.tokenLiteral()
+    out += '('
+    out += params.join(', ')
+    out += ') '
+    out += this.body.getString()
+
+    return out
+  }
+}
