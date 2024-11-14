@@ -173,7 +173,7 @@ export function newEnvironment() {
   return new MonkeyEnvironment()
 }
 
-function newEnclosedEnvironment(outer) {
+export function newEnclosedEnvironment(outer) {
   return new MonkeyEnvironment(outer)
 }
 

@@ -21,7 +21,7 @@ import { Quote, MonkeyEnvironment, Macro } from '../src/object.js'
 import { testEval } from './utils.js'
 import { TokenType, Token } from '../src/token.js'
 import { modify } from '../src/quote.js'
-import { defineMacros } from '../src/marco.js'
+import { defineMacros, expandMacros } from '../src/marco.js'
 
 function testQuote() {
   const tests = [
@@ -359,11 +359,52 @@ function testDefineMacros() {
   }
 }
 
+function testExpandMacros() {
+  const tests = [
+    {
+      input: `
+          let infixExpression = macro() { quote(1 + 2); };
+
+          infixExpression();
+          `,
+      expected: `(1 + 2)`,
+    },
+    {
+      input: `
+          let reverse = macro(a, b) { quote(unquote(b) - unquote(a)); };
+
+          reverse(2 + 2, 10 - 5);
+          `,
+      expected: `(10 - 5) - (2 + 2)`,
+    },
+  ]
+
+  for (let i = 0; i < tests.length; i++) {
+    const tt = tests[i]
+
+    const expected = testParseProgram(tt.expected)
+    const program = testParseProgram(tt.input)
+
+    const env = new MonkeyEnvironment()
+
+    defineMacros(program, env)
+
+    const expanded = expandMacros(program, env)
+
+    if (expanded.getString() !== expected.getString()) {
+      console.error(
+        `not equal. want=${expected.getString()}, got=${expanded.getString()}`
+      )
+    }
+  }
+}
+
 const main = () => {
   testQuote()
   testQuoteUnquote()
   testModify()
   testDefineMacros()
+  testExpandMacros()
 }
 
 main()
