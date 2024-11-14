@@ -10,6 +10,7 @@ export const MonkeyObjectType = {
   ARRAY: 'ARRAY',
   HASH: 'HASH',
   QUOTE: 'QUOTE',
+  MACRO: 'MACRO',
 }
 
 class MonkeyObject {
@@ -244,5 +245,35 @@ export class Quote {
 
   inspect() {
     return `QUOTE(${this.node.getString()})`
+  }
+}
+
+export class Macro {
+  constructor(parameters, body, env) {
+    this.parameters = parameters
+    this.body = body
+    this.env = env
+  }
+
+  type() {
+    return MonkeyObjectType.MACRO
+  }
+
+  inspect() {
+    let out = ''
+
+    let params = []
+    for (let p of this.parameters) {
+      params.push(p.getString())
+    }
+
+    out += 'macro'
+    out += '('
+    out += params.join(', ')
+    out += ') {\n'
+    out += this.body.getString()
+    out += '\n}'
+
+    return out
   }
 }

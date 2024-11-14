@@ -1,5 +1,7 @@
 import { isEqual } from 'lodash-es'
 
+import { Parser } from '../src/parser.js'
+import { Lexer } from '../src/lexer.js'
 import {
   ExpressionStatement,
   IntegerLiteral,
@@ -15,10 +17,11 @@ import {
   ArrayLiteral,
   HashLiteral,
 } from '../src/ast.js'
-import { Quote } from '../src/object.js'
+import { Quote, MonkeyEnvironment, Macro } from '../src/object.js'
 import { testEval } from './utils.js'
 import { TokenType, Token } from '../src/token.js'
 import { modify } from '../src/quote.js'
+import { defineMacros } from '../src/marco.js'
 
 function testQuote() {
   const tests = [
@@ -257,10 +260,110 @@ function testModify() {
   }
 }
 
+function testParseProgram(input) {
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+  return program
+}
+
+function testDefineMacros() {
+  const input = `
+  let number = 1;
+  let function = fn(x, y) { x + y };
+  let mymacro = macro(x, y) { x + y; };
+  `
+
+  const env = new MonkeyEnvironment()
+  const program = testParseProgram(input)
+
+  defineMacros(program, env)
+
+  // 检查处理后的程序语句数量是否为2
+  if (program.statements.length !== 2) {
+    console.error('Wrong number of statements. got=', program.statements.length)
+    return
+  }
+
+  // 检查环境中是否不存在number变量
+  const numberObj = env.get('number')
+  if (numberObj) {
+    console.error('number should not be defined')
+    return
+  }
+
+  // 检查环境中是否不存在function变量
+  const functionObj = env.get('function')
+  if (functionObj) {
+    console.error('function should not be defined')
+    return
+  }
+
+  // 检查环境中是否存在mymacro对应的对象
+  const obj = env.get('mymacro')
+  if (!obj) {
+    console.error('macro not in environment.')
+    return
+  }
+
+  const macro = obj
+  // 检查获取到的对象是否为object.Macro类型
+  if (!(macro instanceof Macro)) {
+    console.error(
+      'object is not Macro. got=',
+      typeof macro,
+      '(',
+      JSON.stringify(macro),
+      ')'
+    )
+    return
+  }
+
+  // 检查宏对象的参数数量是否为2
+  if (macro.parameters.length !== 2) {
+    console.error(
+      'Wrong number of macro parameters. got=',
+      macro.parameters.length
+    )
+    return
+  }
+
+  // 检查宏对象的第一个参数是否为'x'
+  if (macro.parameters[0].getString() !== 'x') {
+    console.error(
+      "parameter is not 'x'. got=",
+      JSON.stringify(macro.parameters[0])
+    )
+    return
+  }
+
+  // 检查宏对象的第二个参数是否为'y'
+  if (macro.parameters[1].getString() !== 'y') {
+    console.error(
+      "parameter is not 'y'. got=",
+      JSON.stringify(macro.parameters[1])
+    )
+    return
+  }
+
+  const expectedBody = '(x + y)'
+  // 检查宏对象的主体代码块的字符串表示是否符合预期
+  if (macro.body.getString() !== expectedBody) {
+    console.error(
+      'body is not ',
+      expectedBody,
+      '. got=',
+      JSON.stringify(macro.body.getString())
+    )
+    return
+  }
+}
+
 const main = () => {
   testQuote()
   testQuoteUnquote()
   testModify()
+  testDefineMacros()
 }
 
 main()
