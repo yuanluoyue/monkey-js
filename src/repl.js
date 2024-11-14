@@ -2,6 +2,7 @@ import { createInterface } from 'readline'
 import { Lexer } from './lexer.js'
 import { Parser } from './parser.js'
 import { evalMonkey, newEnvironment } from './evaluator.js'
+import { defineMacros, expandMacros } from '../src/marco.js'
 
 const MONKEY_FACE = `            
             __,__
@@ -36,6 +37,7 @@ export const startRepl = (
   })
 
   const env = newEnvironment()
+  const macroEnv = newEnvironment()
 
   rl.prompt()
 
@@ -50,10 +52,12 @@ export const startRepl = (
       return
     }
 
-    const evaluated = evalMonkey(program, env)
+    defineMacros(program, macroEnv)
+    const expanded = expandMacros(program, macroEnv)
+    const evaluated = evalMonkey(expanded, env)
 
     if (evaluated !== null) {
-      outputStream.write(evaluated.inspect())
+      outputStream.write(evaluated?.inspect() || '')
       outputStream.write('\n')
     }
 
