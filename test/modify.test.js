@@ -377,6 +377,20 @@ function testExpandMacros() {
           `,
       expected: `(10 - 5) - (2 + 2)`,
     },
+    {
+      input: `
+          let unless = macro(condition, consequence, alternative) {
+              quote(if (!(unquote(condition))) {
+                  unquote(consequence);
+              } else {
+                  unquote(alternative);
+              });
+          };
+
+          unless(10 > 5, puts("not greater"), puts("greater"));
+          `,
+      expected: `if (!(10 > 5)) { puts("not greater") } else { puts("greater") }`,
+    },
   ]
 
   for (let i = 0; i < tests.length; i++) {
