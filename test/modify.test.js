@@ -14,11 +14,11 @@ import {
   FunctionLiteral,
   ArrayLiteral,
   HashLiteral,
-  modify,
 } from '../src/ast.js'
 import { Quote } from '../src/object.js'
 import { testEval } from './utils.js'
 import { TokenType, Token } from '../src/token.js'
+import { modify } from '../src/quote.js'
 
 function testQuote() {
   const tests = [
@@ -81,6 +81,33 @@ function testQuoteUnquote() {
       input: 'quote(unquote(4 + 4) + 8)',
       expected: '(8 + 8)',
     },
+    {
+      input: `let foobar = 8;
+          quote(foobar)`,
+      expected: `foobar`,
+    },
+    {
+      input: `let foobar = 8;
+          quote(unquote(foobar))`,
+      expected: `8`,
+    },
+    {
+      input: `quote(unquote(true))`,
+      expected: `true`,
+    },
+    {
+      input: `quote(unquote(true == false))`,
+      expected: `false`,
+    },
+    {
+      input: `quote(unquote(quote(4 + 4)))`,
+      expected: `(4 + 4)`,
+    },
+    {
+      input: `let quotedInfixExpression = quote(4 + 4);
+      quote(unquote(4 + 4) + unquote(quotedInfixExpression))`,
+      expected: `(8 + (4 + 4))`,
+    },
   ]
 
   for (let tt of tests) {
@@ -98,7 +125,7 @@ function testQuoteUnquote() {
       return
     }
 
-    if (quote.node.getString() !== tt.expected) {
+    if (String(quote.node.getString()) !== tt.expected) {
       console.error(
         `not equal. got=${quote.node.getString()}, want=${tt.expected}`
       )

@@ -31,8 +31,8 @@ import {
   MonkeyHash,
   MonkeyBuiltin,
   MonkeyEnvironment,
-  Quote,
 } from './object.js'
+import { quote } from './quote.js'
 
 const singleTrue = new MonkeyBoolean(true)
 const singleFalse = new MonkeyBoolean(false)
@@ -475,10 +475,6 @@ function evalHashLiteral(node, env) {
   return new MonkeyHash(pairs)
 }
 
-function quote(node) {
-  return new Quote(node)
-}
-
 export function evalMonkey(node, env = newEnvironment()) {
   switch (true) {
     case node instanceof Program:
@@ -536,7 +532,7 @@ export function evalMonkey(node, env = newEnvironment()) {
     }
     case node instanceof CallExpression:
       if (node.function.tokenLiteral() === 'quote') {
-        return quote(node.arguments[0])
+        return quote(node.arguments[0], env)
       }
 
       const functionObj = evalMonkey(node.function, env)
