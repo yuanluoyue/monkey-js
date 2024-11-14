@@ -40,6 +40,8 @@ export const TokenType = {
   RBRACKET: ']',
 
   COLON: ':',
+
+  MACRO: 'MACRO',
 }
 
 const keywordIdentMap = {
@@ -50,6 +52,7 @@ const keywordIdentMap = {
   if: 'IF',
   else: 'ELSE',
   return: 'RETURN',
+  macro: 'MACRO',
 }
 
 export class Token {

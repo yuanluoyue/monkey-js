@@ -26,6 +26,7 @@ const testNextToken = () => {
     "foo bar";
     [1, 2];
     {"foo": "bar"};
+    macro(x, y) { x + y; };
     `
 
   const tests = [
@@ -136,6 +137,20 @@ const testNextToken = () => {
     { expectedType: TokenType.STRING, expectedLiteral: 'bar' },
     { expectedType: TokenType.RBRACE, expectedLiteral: '}' },
     { expectedType: TokenType.SEMICOLON, expectedLiteral: ';' },
+
+    { expectedType: TokenType.MACRO, expectedLiteral: "macro" },
+    { expectedType: TokenType.LPAREN, expectedLiteral: "(" },
+    { expectedType: TokenType.IDENT, expectedLiteral: "x" },
+    { expectedType: TokenType.COMMA, expectedLiteral: "," },
+    { expectedType: TokenType.IDENT, expectedLiteral: "y" },
+    { expectedType: TokenType.RPAREN, expectedLiteral: ")" },
+    { expectedType: TokenType.LBRACE, expectedLiteral: "{" },
+    { expectedType: TokenType.IDENT, expectedLiteral: "x" },
+    { expectedType: TokenType.PLUS, expectedLiteral: "+" },
+    { expectedType: TokenType.IDENT, expectedLiteral: "y" },
+    { expectedType: TokenType.SEMICOLON, expectedLiteral: ";" },
+    { expectedType: TokenType.RBRACE, expectedLiteral: "}" },
+    { expectedType: TokenType.SEMICOLON, expectedLiteral: ";" },
 
     { expectedType: TokenType.EOF, expectedLiteral: '' },
   ]
