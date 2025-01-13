@@ -13,18 +13,8 @@ export const MonkeyObjectType = {
   MACRO: 'MACRO',
 }
 
-class MonkeyObject {
-  type() {
-    throw new Error('Object type method must be implemented.')
-  }
-  inspect() {
-    throw new Error('Object inspect method must be implemented.')
-  }
-}
-
-export class MonkeyInteger extends MonkeyObject {
+export class MonkeyInteger {
   constructor(value) {
-    super()
     this.value = value
   }
 
@@ -45,9 +35,8 @@ export class MonkeyInteger extends MonkeyObject {
   }
 }
 
-export class MonkeyBoolean extends MonkeyObject {
+export class MonkeyBoolean {
   constructor(value) {
-    super()
     this.value = value
   }
 
@@ -68,9 +57,8 @@ export class MonkeyBoolean extends MonkeyObject {
   }
 }
 
-export class MonkeyString extends MonkeyObject {
+export class MonkeyString {
   constructor(value) {
-    super()
     this.value = value
   }
 
@@ -91,7 +79,7 @@ export class MonkeyString extends MonkeyObject {
   }
 }
 
-export class MonkeyNull extends MonkeyObject {
+export class MonkeyNull {
   type() {
     return MonkeyObjectType.NULL
   }
@@ -101,9 +89,8 @@ export class MonkeyNull extends MonkeyObject {
   }
 }
 
-export class MonkeyReturnValue extends MonkeyObject {
+export class MonkeyReturnValue {
   constructor(value) {
-    super()
     this.value = value
   }
 
@@ -116,9 +103,8 @@ export class MonkeyReturnValue extends MonkeyObject {
   }
 }
 
-export class MonkeyError extends MonkeyObject {
+export class MonkeyError {
   constructor(message) {
-    super()
     this.message = message
   }
   type() {

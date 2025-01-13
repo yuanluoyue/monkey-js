@@ -6,7 +6,6 @@ import {
   MonkeyHash,
   MonkeyInteger,
   MonkeyBoolean,
-  Quote,
 } from '../src/object.js'
 import {
   testIntegerObject,

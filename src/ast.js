@@ -1,24 +1,5 @@
-class Node {
-  constructor() {
-    if (new.target === Node) {
-      throw new Error(
-        'Node is an abstract class and cannot be instantiated directly.'
-      )
-    }
-  }
-
-  tokenLiteral() {
-    throw new Error('TokenLiteral method must be implemented by subclasses.')
-  }
-
-  getString() {
-    throw new Error('String method must be implemented by subclasses.')
-  }
-}
-
-export class Program extends Node {
+export class Program {
   constructor(statements) {
-    super()
     this.statements = statements || []
   }
 
@@ -39,15 +20,12 @@ export class Program extends Node {
   }
 }
 
-export class LetStatement extends Node {
+export class LetStatement {
   constructor(token, name, value) {
-    super()
     this.token = token
     this.name = name
     this.value = value
   }
-
-  statementNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -66,14 +44,11 @@ export class LetStatement extends Node {
   }
 }
 
-export class Identifier extends Node {
+export class Identifier {
   constructor(token, value) {
-    super()
     this.token = token
     this.value = value
   }
-
-  expressionNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -84,14 +59,11 @@ export class Identifier extends Node {
   }
 }
 
-export class ReturnStatement extends Node {
+export class ReturnStatement {
   constructor(token, returnValue) {
-    super()
     this.token = token
     this.returnValue = returnValue
   }
-
-  statementNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -108,14 +80,11 @@ export class ReturnStatement extends Node {
   }
 }
 
-export class ExpressionStatement extends Node {
+export class ExpressionStatement {
   constructor(token, expression) {
-    super()
     this.token = token
     this.expression = expression
   }
-
-  statementNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -129,14 +98,11 @@ export class ExpressionStatement extends Node {
   }
 }
 
-export class BlockStatement extends Node {
+export class BlockStatement {
   constructor(token, statements) {
-    super()
     this.token = token
     this.statements = statements || []
   }
-
-  statementNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -151,15 +117,12 @@ export class BlockStatement extends Node {
   }
 }
 
-export class IntegerLiteral extends Node {
+export class IntegerLiteral {
   constructor(token) {
-    super()
     this.token = token
     this.value = parseInt(token.literal)
   }
 
-  expressionNode() {}
-
   tokenLiteral() {
     return this.token.literal
   }
@@ -169,15 +132,12 @@ export class IntegerLiteral extends Node {
   }
 }
 
-export class BooleanLiteral extends Node {
+export class BooleanLiteral {
   constructor(token) {
-    super()
     this.token = token
     this.value = token.literal === 'true'
   }
 
-  expressionNode() {}
-
   tokenLiteral() {
     return this.token.literal
   }
@@ -187,15 +147,12 @@ export class BooleanLiteral extends Node {
   }
 }
 
-export class FunctionLiteral extends Node {
+export class FunctionLiteral {
   constructor(token, parameters, body) {
-    super()
     this.token = token
     this.parameters = parameters
     this.body = body
   }
-
-  expressionNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -213,14 +170,11 @@ export class FunctionLiteral extends Node {
   }
 }
 
-export class StringLiteral extends Node {
+export class StringLiteral {
   constructor(token, value) {
-    super()
     this.token = token
     this.value = value
   }
-
-  expressionNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -231,14 +185,11 @@ export class StringLiteral extends Node {
   }
 }
 
-export class ArrayLiteral extends Node {
+export class ArrayLiteral {
   constructor(token, elements) {
-    super()
     this.token = token
     this.elements = elements
   }
-
-  expressionNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -261,14 +212,11 @@ export class ArrayLiteral extends Node {
   }
 }
 
-export class HashLiteral extends Node {
+export class HashLiteral {
   constructor(token, pairs) {
-    super()
     this.token = token
     this.pairs = pairs || new Map()
   }
-
-  expressionNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -289,15 +237,12 @@ export class HashLiteral extends Node {
   }
 }
 
-export class PrefixExpression extends Node {
+export class PrefixExpression {
   constructor(token, operator, right) {
-    super()
     this.token = token
     this.operator = operator
     this.right = right
   }
-
-  expressionNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -313,16 +258,13 @@ export class PrefixExpression extends Node {
   }
 }
 
-export class InfixExpression extends Node {
+export class InfixExpression {
   constructor(token, left, operator, right) {
-    super()
     this.token = token
     this.left = left
     this.operator = operator
     this.right = right
   }
-
-  expressionNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -339,16 +281,13 @@ export class InfixExpression extends Node {
   }
 }
 
-export class IfExpression extends Node {
+export class IfExpression {
   constructor(token, condition, consequence, alternative) {
-    super()
     this.token = token
     this.condition = condition
     this.consequence = consequence
     this.alternative = alternative
   }
-
-  expressionNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -368,15 +307,12 @@ export class IfExpression extends Node {
   }
 }
 
-export class CallExpression extends Node {
+export class CallExpression {
   constructor(token, functionExpression, fnArguments) {
-    super()
     this.token = token
     this.function = functionExpression
     this.arguments = fnArguments
   }
-
-  expressionNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -393,15 +329,12 @@ export class CallExpression extends Node {
   }
 }
 
-export class IndexExpression extends Node {
+export class IndexExpression {
   constructor(token, left, index) {
-    super()
     this.token = token
     this.left = left
     this.index = index
   }
-
-  expressionNode() {}
 
   tokenLiteral() {
     return this.token.literal
@@ -425,8 +358,6 @@ export class MacroLiteral {
     this.parameters = parameters
     this.body = body
   }
-
-  expressionNode() {}
 
   tokenLiteral() {
     return this.token.literal

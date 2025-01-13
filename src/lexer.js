@@ -131,6 +131,9 @@ export class Lexer {
   }
 
   isLetter(ch) {
+    if (ch === undefined) {
+      return false
+    }
     return /[a-z]/i.test(ch) || ch === '_'
   }
 
