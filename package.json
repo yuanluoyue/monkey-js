@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "repl": "node ./src/main.js",
-    "test": "node ./test/lexer.test.js; node ./test/parser.test.js; node ./test/evaluator.test.js; node ./test/modify.test.js;"
+    "test": "node ./test/lexer.test.js; node ./test/parser.test.js; node ./test/evaluator.test.js; node ./test/modify.test.js; node ./test/code.test.js;"
   },
   "keywords": [],
   "author": "",
