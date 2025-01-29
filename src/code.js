@@ -10,16 +10,84 @@ class Definition {
   }
 }
 
+export class Instructions extends Array {
+  constructor(...items) {
+    super(...items)
+  }
+
+  fmtInstruction(def, operands) {
+    const operandCount = def.operandWidths.length
+    if (operands.length !== operandCount) {
+      return `ERROR: operand len ${operands.length} does not match defined ${operandCount}\n`
+    }
+    switch (operandCount) {
+      case 1:
+        return `${def.name} ${operands[0]}`
+      default:
+        return `ERROR: unhandled operandCount for ${def.name}\n`
+    }
+  }
+
+  toString() {
+    let out = ''
+    let i = 0
+    while (i < this.length) {
+      const def = lookup(this[i])
+      if (!def) {
+        out += `ERROR: opcode ${this[i]} undefined\n`
+        i++
+        continue
+      }
+
+      const { operands, offset } = readOperands(def, this.slice(i + 1))
+      out += `${String(i).padStart(4, '0')} ${this.fmtInstruction(
+        def,
+        operands
+      )}\n`
+      i += 1 + offset
+    }
+    return out
+  }
+}
+
 const definitions = {
   [Opcode.OpConstant]: new Definition('OpConstant', [2]), // OpConstant 操作码的第一个操作数的宽度为 2 字节
 }
 
-function lookup(op) {
+export function lookup(op) {
   const def = definitions[op]
   if (!def) {
     throw new Error(`opcode ${op} undefined`)
   }
   return def
+}
+
+// 读取操作数的函数
+export function readOperands(def, ins) {
+  const operands = new Instructions(def.operandWidths.length).fill(0)
+  let offset = 0
+
+  for (let i = 0; i < def.operandWidths.length; i++) {
+    const width = def.operandWidths[i]
+    switch (width) {
+      case 2:
+        operands[i] = readUint16(ins.slice(offset))
+        break
+    }
+    offset += width
+  }
+
+  return { operands, offset }
+}
+
+// 读取 16 位无符号整数的函数
+export function readUint16(ins) {
+  const buffer = new ArrayBuffer(2)
+  const view = new DataView(buffer)
+  for (let i = 0; i < 2; i++) {
+    view.setUint8(i, ins[i])
+  }
+  return view.getUint16(0, false)
 }
 
 export function make(op, ...operands) {
@@ -34,7 +102,7 @@ export function make(op, ...operands) {
     instructionLen += w
   }
 
-  let instruction = new Array(instructionLen).fill(0)
+  let instruction = new Instructions(instructionLen).fill(0)
   instruction[0] = op
 
   let offset = 1

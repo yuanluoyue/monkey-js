@@ -1,4 +1,10 @@
-import { Opcode, make } from '../src/code.js'
+import {
+  Opcode,
+  make,
+  Instructions,
+  lookup,
+  readOperands,
+} from '../src/code.js'
 
 function testMake() {
   const tests = [
@@ -29,8 +35,73 @@ function testMake() {
   }
 }
 
+function testInstructionsString() {
+  const instructions = [
+    make(Opcode.OpConstant, 1),
+    make(Opcode.OpConstant, 2),
+    make(Opcode.OpConstant, 65535),
+  ]
+
+  const expected = `0000 OpConstant 1
+0003 OpConstant 2
+0006 OpConstant 65535
+`
+
+  let concatted = []
+  for (let ins of instructions) {
+    concatted = new Instructions(...concatted, ...ins)
+  }
+
+  if (concatted.toString() !== expected) {
+    console.error(
+      `instructions wrongly formatted.\nwant="${expected}"\ngot="${concatted.toString()}"`
+    )
+  }
+}
+
+function testReadOperands() {
+  // 定义测试用例数组
+  const tests = [
+    {
+      op: Opcode.OpConstant,
+      operands: [65535],
+      bytesRead: 2,
+    },
+  ]
+
+  // 遍历测试用例
+  for (let tt of tests) {
+    // 生成指令
+    const instruction = make(tt.op, ...tt.operands)
+
+    // 查找操作码对应的定义
+    const def = lookup(tt.op)
+    if (!def) {
+      console.error(`definition not found: opcode ${tt.op} undefined`)
+      return
+    }
+
+    // 读取操作数
+    const { operands, offset } = readOperands(def, instruction.slice(1))
+    if (offset !== tt.bytesRead) {
+      console.error(`offset wrong. want=${tt.bytesRead}, got=${offset}`)
+      return
+    }
+
+    // 比较读取的操作数和预期的操作数
+    for (let i = 0; i < tt.operands.length; i++) {
+      const want = tt.operands[i]
+      if (operands[i] !== want) {
+        console.error(`operand wrong. want=${want}, got=${operands[i]}`)
+      }
+    }
+  }
+}
+
 function main() {
   testMake()
+  testInstructionsString()
+  testReadOperands()
 }
 
 main()
