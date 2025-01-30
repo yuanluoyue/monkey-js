@@ -49,6 +49,15 @@ export class Compiler {
         case '+':
           this.emit(Opcode.OpAdd)
           break
+        case '-':
+          this.emit(Opcode.OpSub)
+          break
+        case '*':
+          this.emit(Opcode.OpMul)
+          break
+        case '/':
+          this.emit(Opcode.OpDiv)
+          break
         default:
           return new Error(`unknown operator ${node.operator}`)
       }

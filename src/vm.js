@@ -1,4 +1,4 @@
-import { MonkeyInteger } from './object.js'
+import { MonkeyInteger, MonkeyObjectType } from './object.js'
 import { Opcode, readUint16 } from './code.js'
 
 const StackSize = 2048
@@ -41,6 +41,51 @@ export class VM {
     return o
   }
 
+  executeBinaryIntegerOperation(op, left, right) {
+    const leftValue = left.value
+    const rightValue = right.value
+
+    let result
+
+    switch (op) {
+      case Opcode.OpAdd:
+        result = leftValue + rightValue
+        break
+      case Opcode.OpSub:
+        result = leftValue - rightValue
+        break
+      case Opcode.OpMul:
+        result = leftValue * rightValue
+        break
+      case Opcode.OpDiv:
+        result = Math.floor(leftValue / rightValue)
+        break
+      default:
+        return new Error(`unknown integer operator: ${op}`)
+    }
+
+    return this.push(new MonkeyInteger(result))
+  }
+
+  executeBinaryOperation(op) {
+    const right = this.pop()
+    const left = this.pop()
+
+    const leftType = left.type()
+    const rightType = right.type()
+
+    if (
+      leftType === MonkeyObjectType.INTEGER &&
+      rightType === MonkeyObjectType.INTEGER
+    ) {
+      return this.executeBinaryIntegerOperation(op, left, right)
+    }
+
+    return new Error(
+      `unsupported types for binary operation: ${leftType} ${rightType}`
+    )
+  }
+
   run() {
     for (let ip = 0; ip < this.instructions.length; ip++) {
       const op = this.instructions[ip]
@@ -52,19 +97,13 @@ export class VM {
           break
 
         case Opcode.OpAdd:
-          const right = this.pop()
-          const left = this.pop()
-          if (
-            !(right instanceof MonkeyInteger) ||
-            !(left instanceof MonkeyInteger)
-          ) {
-            return new Error('操作数不是有效的整数对象')
+        case Opcode.OpSub:
+        case Opcode.OpMul:
+        case Opcode.OpDiv:
+          const err = this.executeBinaryOperation(op)
+          if (err) {
+            return err
           }
-          const leftValue = left.value
-          const rightValue = right.value
-          const result = leftValue + rightValue
-
-          this.push(new MonkeyInteger(result))
           break
 
         case Opcode.OpPop:

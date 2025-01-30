@@ -109,6 +109,36 @@ function testIntegerArithmetic() {
         make(Opcode.OpPop),
       ],
     },
+    {
+      input: '1 - 2',
+      expectedConstants: [1, 2],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpSub),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: '1 * 2',
+      expectedConstants: [1, 2],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpMul),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: '2 / 1',
+      expectedConstants: [2, 1],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpDiv),
+        make(Opcode.OpPop),
+      ],
+    },
   ]
 
   runCompilerTests(tests)
