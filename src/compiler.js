@@ -35,6 +35,7 @@ export class Compiler {
       if (err) {
         return err
       }
+      this.emit(Opcode.OpPop)
     } else if (node instanceof InfixExpression) {
       const errLeft = this.compile(node.left)
       if (errLeft) {

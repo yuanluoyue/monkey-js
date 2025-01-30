@@ -19,6 +19,10 @@ export class VM {
     return this.stack[this.sp - 1]
   }
 
+  lastPoppedStackElem() {
+    return this.stack[this.sp]
+  }
+
   push(o) {
     if (this.sp >= StackSize) {
       return new Error('stack overflow')
@@ -61,6 +65,10 @@ export class VM {
           const result = leftValue + rightValue
 
           this.push(new MonkeyInteger(result))
+          break
+
+        case Opcode.OpPop:
+          this.pop()
           break
         // default:
         //   return new Error(`未知操作码: ${op}`)

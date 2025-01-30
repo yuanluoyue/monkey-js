@@ -1,6 +1,7 @@
 export const Opcode = {
   OpConstant: 0,
   OpAdd: 1,
+  OpPop: 2,
 }
 
 class Definition {
@@ -59,6 +60,7 @@ export class Instructions extends Array {
 const definitions = {
   [Opcode.OpConstant]: new Definition('OpConstant', [2]), // OpConstant 操作码的第一个操作数的宽度为 2 字节
   [Opcode.OpAdd]: new Definition('OpAdd', []),
+  [Opcode.OpPop]: new Definition('OpPop', []),
 }
 
 export function lookup(op) {

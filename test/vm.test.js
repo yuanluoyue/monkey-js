@@ -27,8 +27,7 @@ function runVmTests(tests) {
       return
     }
 
-    const stackElem = vm.stackTop()
-
+    const stackElem = vm.lastPoppedStackElem()
     testExpectedObject(tt.expected, stackElem)
   }
 }

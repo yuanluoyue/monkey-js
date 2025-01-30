@@ -96,6 +96,17 @@ function testIntegerArithmetic() {
         make(Opcode.OpConstant, 0),
         make(Opcode.OpConstant, 1),
         make(Opcode.OpAdd),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: '1; 2;',
+      expectedConstants: [1, 2],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpPop),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpPop),
       ],
     },
   ]

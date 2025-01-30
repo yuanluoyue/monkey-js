@@ -63,7 +63,7 @@ export const startRepl = (
       console.error(`Woops! Executing bytecode failed:\n ${runErr}`)
     }
 
-    const stackTop = machine.stackTop()
+    const stackTop = machine.lastPoppedStackElem()
     if (stackTop && typeof stackTop.inspect === 'function') {
       console.log(stackTop.inspect())
     }
