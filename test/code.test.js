@@ -13,6 +13,11 @@ function testMake() {
       operands: [65534],
       expected: [Opcode.OpConstant, 255, 254],
     },
+    {
+      op: Opcode.OpAdd,
+      operands: [],
+      expected: [Opcode.OpAdd],
+    },
   ]
 
   for (let tt of tests) {
@@ -37,14 +42,14 @@ function testMake() {
 
 function testInstructionsString() {
   const instructions = [
-    make(Opcode.OpConstant, 1),
+    make(Opcode.OpAdd),
     make(Opcode.OpConstant, 2),
     make(Opcode.OpConstant, 65535),
   ]
 
-  const expected = `0000 OpConstant 1
-0003 OpConstant 2
-0006 OpConstant 65535
+  const expected = `0000 OpAdd
+0001 OpConstant 2
+0004 OpConstant 65535
 `
 
   let concatted = []

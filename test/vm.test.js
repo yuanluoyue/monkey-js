@@ -45,7 +45,7 @@ function testIntegerArithmetic() {
     },
     {
       input: '1 + 2',
-      expected: 2,
+      expected: 3,
     },
   ]
 

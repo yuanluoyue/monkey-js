@@ -5,7 +5,7 @@ import {
   IntegerLiteral,
 } from '../src/ast.js'
 import { MonkeyInteger } from '../src/object.js'
-import { make, Opcode } from './code.js'
+import { make, Opcode, Instructions } from './code.js'
 
 class Bytecode {
   constructor(instructions, constants) {
@@ -18,7 +18,7 @@ class Bytecode {
 export class Compiler {
   constructor() {
     // 初始化指令和常量数组
-    this.instructions = []
+    this.instructions = new Instructions()
     this.constants = []
   }
 
@@ -43,6 +43,13 @@ export class Compiler {
       const errRight = this.compile(node.right)
       if (errRight) {
         return errRight
+      }
+      switch (node.operator) {
+        case '+':
+          this.emit(Opcode.OpAdd)
+          break
+        default:
+          return new Error(`unknown operator ${node.operator}`)
       }
     } else if (node instanceof IntegerLiteral) {
       // 处理整数字面量

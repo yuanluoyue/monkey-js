@@ -1,5 +1,6 @@
 export const Opcode = {
   OpConstant: 0,
+  OpAdd: 1,
 }
 
 class Definition {
@@ -12,15 +13,20 @@ class Definition {
 
 export class Instructions extends Array {
   constructor(...items) {
-    super(...items)
+    if (items.length === 1) {
+      super()
+      this.push(items[0])
+    } else {
+      super(...items)
+    }
   }
 
   fmtInstruction(def, operands) {
     const operandCount = def.operandWidths.length
-    if (operands.length !== operandCount) {
-      return `ERROR: operand len ${operands.length} does not match defined ${operandCount}\n`
-    }
+
     switch (operandCount) {
+      case 0:
+        return def.name
       case 1:
         return `${def.name} ${operands[0]}`
       default:
@@ -52,6 +58,7 @@ export class Instructions extends Array {
 
 const definitions = {
   [Opcode.OpConstant]: new Definition('OpConstant', [2]), // OpConstant 操作码的第一个操作数的宽度为 2 字节
+  [Opcode.OpAdd]: new Definition('OpAdd', []),
 }
 
 export function lookup(op) {

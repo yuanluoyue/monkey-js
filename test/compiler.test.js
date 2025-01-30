@@ -95,6 +95,7 @@ function testIntegerArithmetic() {
       expectedInstructions: [
         make(Opcode.OpConstant, 0),
         make(Opcode.OpConstant, 1),
+        make(Opcode.OpAdd),
       ],
     },
   ]

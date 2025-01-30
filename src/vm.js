@@ -1,3 +1,4 @@
+import { MonkeyInteger } from './object.js'
 import { Opcode, readUint16 } from './code.js'
 
 const StackSize = 2048
@@ -27,6 +28,15 @@ export class VM {
     return null
   }
 
+  pop() {
+    if (this.sp === 0) {
+      return null
+    }
+    const o = this.stack[this.sp - 1]
+    this.sp--
+    return o
+  }
+
   run() {
     for (let ip = 0; ip < this.instructions.length; ip++) {
       const op = this.instructions[ip]
@@ -36,8 +46,24 @@ export class VM {
           ip += 2
           this.push(this.constants[constIndex])
           break
-        default:
-          return new Error(`未知操作码: ${op}`)
+
+        case Opcode.OpAdd:
+          const right = this.pop()
+          const left = this.pop()
+          if (
+            !(right instanceof MonkeyInteger) ||
+            !(left instanceof MonkeyInteger)
+          ) {
+            return new Error('操作数不是有效的整数对象')
+          }
+          const leftValue = left.value
+          const rightValue = right.value
+          const result = leftValue + rightValue
+
+          this.push(new MonkeyInteger(result))
+          break
+        // default:
+        //   return new Error(`未知操作码: ${op}`)
       }
     }
     return null
