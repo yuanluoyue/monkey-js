@@ -1,6 +1,8 @@
 import { createInterface } from 'readline'
 import { Lexer } from './lexer.js'
 import { Parser } from './parser.js'
+import { Compiler } from '../src/compiler.js'
+import { VM } from '../src/vm.js'
 import { evalMonkey, newEnvironment } from './evaluator.js'
 import { defineMacros, expandMacros } from '../src/marco.js'
 
@@ -36,9 +38,6 @@ export const startRepl = (
     prompt: PROMPT,
   })
 
-  const env = newEnvironment()
-  const macroEnv = newEnvironment()
-
   rl.prompt()
 
   rl.on('line', (line) => {
@@ -52,13 +51,21 @@ export const startRepl = (
       return
     }
 
-    defineMacros(program, macroEnv)
-    const expanded = expandMacros(program, macroEnv)
-    const evaluated = evalMonkey(expanded, env)
+    const comp = new Compiler()
+    const compileErr = comp.compile(program)
+    if (compileErr) {
+      console.error(`Woops! Compilation failed:\n ${compileErr}`)
+    }
 
-    if (evaluated !== null) {
-      outputStream.write(evaluated?.inspect() || '')
-      outputStream.write('\n')
+    const machine = new VM(comp.bytecode())
+    const runErr = machine.run()
+    if (runErr) {
+      console.error(`Woops! Executing bytecode failed:\n ${runErr}`)
+    }
+
+    const stackTop = machine.stackTop()
+    if (stackTop && typeof stackTop.inspect === 'function') {
+      console.log(stackTop.inspect())
     }
 
     rl.prompt()
