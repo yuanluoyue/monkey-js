@@ -1,15 +1,6 @@
-import { Parser } from '../src/parser.js'
-import { Lexer } from '../src/lexer.js'
 import { Compiler } from '../src/compiler.js'
 import { make, Opcode, Instructions } from '../src/code.js'
-import { testIntegerObject } from './utils.js'
-
-function parse(input) {
-  const lexer = new Lexer(input)
-  const parser = new Parser(lexer)
-  const program = parser.parseProgram()
-  return program
-}
+import { testIntegerObject, parse } from './utils.js'
 
 function concatInstructions(s) {
   let out = new Instructions()

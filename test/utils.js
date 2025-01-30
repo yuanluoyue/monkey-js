@@ -159,3 +159,10 @@ export const testEval = (input) => {
   const program = parser.parseProgram()
   return evalMonkey(program)
 }
+
+export function parse(input) {
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+  return program
+}
