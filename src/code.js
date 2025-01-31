@@ -10,6 +10,8 @@ export const Opcode = {
   OpEqual: 8,
   OpNotEqual: 9,
   OpGreaterThan: 10,
+  OpMinus: 11,
+  OpBang: 12,
 }
 
 class Definition {
@@ -77,6 +79,8 @@ const definitions = {
   [Opcode.OpEqual]: new Definition('OpEqual', []),
   [Opcode.OpNotEqual]: new Definition('OpNotEqual', []),
   [Opcode.OpGreaterThan]: new Definition('OpGreaterThan', []),
+  [Opcode.OpMinus]: new Definition('OpMinus', []),
+  [Opcode.OpBang]: new Definition('OpBang', []),
 }
 
 export function lookup(op) {

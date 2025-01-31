@@ -131,6 +131,28 @@ export class VM {
     }
   }
 
+  executeBangOperator() {
+    const operand = this.pop()
+
+    if (operand === singleTrue) {
+      return this.push(singleFalse)
+    } else if (operand === singleFalse) {
+      return this.push(singleTrue)
+    }
+    return this.push(singleFalse)
+  }
+
+  executeMinusOperator() {
+    const operand = this.pop()
+
+    if (operand.type() !== MonkeyObjectType.INTEGER) {
+      return new Error(`unsupported type for negation: ${operand.type()}`)
+    }
+
+    const value = operand.value
+    return this.push(new MonkeyInteger(-value))
+  }
+
   run() {
     for (let ip = 0; ip < this.instructions.length; ip++) {
       const op = this.instructions[ip]
@@ -166,6 +188,22 @@ export class VM {
         case Opcode.OpNotEqual:
         case Opcode.OpGreaterThan: {
           const err = this.executeComparison(op)
+          if (err) {
+            return err
+          }
+          break
+        }
+
+        case Opcode.OpBang: {
+          const err = this.executeBangOperator()
+          if (err) {
+            return err
+          }
+          break
+        }
+
+        case Opcode.OpMinus: {
+          const err = this.executeMinusOperator()
           if (err) {
             return err
           }

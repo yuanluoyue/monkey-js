@@ -4,6 +4,7 @@ import {
   InfixExpression,
   IntegerLiteral,
   BooleanLiteral,
+  PrefixExpression,
 } from '../src/ast.js'
 import { MonkeyInteger, MonkeyBoolean } from '../src/object.js'
 import { make, Opcode, Instructions } from './code.js'
@@ -85,6 +86,23 @@ export class Compiler {
         default:
           return new Error(`unknown operator ${node.operator}`)
       }
+    } else if (node instanceof PrefixExpression) {
+      const err = this.compile(node.right)
+      if (err) {
+        return err
+      }
+
+      switch (node.operator) {
+        case '!':
+          this.emit(Opcode.OpBang)
+          break
+        case '-':
+          this.emit(Opcode.OpMinus)
+          break
+        default:
+          return new Error(`unknown operator ${node.operator}`)
+      }
+      return null
     } else if (node instanceof IntegerLiteral) {
       // 处理整数字面量
       const integer = new MonkeyInteger(node.value)
