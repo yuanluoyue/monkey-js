@@ -3,8 +3,9 @@ import {
   ExpressionStatement,
   InfixExpression,
   IntegerLiteral,
+  BooleanLiteral,
 } from '../src/ast.js'
-import { MonkeyInteger } from '../src/object.js'
+import { MonkeyInteger, MonkeyBoolean } from '../src/object.js'
 import { make, Opcode, Instructions } from './code.js'
 
 class Bytecode {
@@ -66,6 +67,12 @@ export class Compiler {
       const integer = new MonkeyInteger(node.value)
       const constantIndex = this.addConstant(integer)
       this.emit(Opcode.OpConstant, constantIndex)
+    } else if (node instanceof BooleanLiteral) {
+      if (node.value) {
+        this.emit(Opcode.OpTrue)
+      } else {
+        this.emit(Opcode.OpFalse)
+      }
     }
     return null
   }

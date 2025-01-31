@@ -1,11 +1,13 @@
 import { Compiler } from '../src/compiler.js'
 import { VM } from '../src/vm.js'
 
-import { testIntegerObject, parse } from './utils.js'
+import { testIntegerObject, testBooleanObject, parse } from './utils.js'
 
 function testExpectedObject(expected, actual) {
   if (typeof expected === 'number') {
     testIntegerObject(actual, expected)
+  } else if (typeof expected === 'boolean') {
+    testBooleanObject(actual, expected)
   }
 }
 
@@ -87,8 +89,24 @@ function testIntegerArithmetic() {
   runVmTests(tests)
 }
 
+function testBooleanExpressions() {
+  const tests = [
+    {
+      input: 'true',
+      expected: true,
+    },
+    {
+      input: 'false',
+      expected: false,
+    },
+  ]
+
+  runVmTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
+  testBooleanExpressions()
 }
 
 main()

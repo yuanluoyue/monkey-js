@@ -5,6 +5,8 @@ export const Opcode = {
   OpSub: 3,
   OpMul: 4,
   OpDiv: 5,
+  OpTrue: 6,
+  OpFalse: 7,
 }
 
 class Definition {
@@ -67,6 +69,8 @@ const definitions = {
   [Opcode.OpSub]: new Definition('OpSub', []),
   [Opcode.OpMul]: new Definition('OpMul', []),
   [Opcode.OpDiv]: new Definition('OpDiv', []),
+  [Opcode.OpTrue]: new Definition('OpTrue', []),
+  [Opcode.OpFalse]: new Definition('OpFalse', []),
 }
 
 export function lookup(op) {

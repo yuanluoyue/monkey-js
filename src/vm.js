@@ -1,6 +1,8 @@
-import { MonkeyInteger, MonkeyObjectType } from './object.js'
+import { MonkeyInteger, MonkeyObjectType, MonkeyBoolean } from './object.js'
 import { Opcode, readUint16 } from './code.js'
 
+const singleTrue = new MonkeyBoolean(true)
+const singleFalse = new MonkeyBoolean(false)
 const StackSize = 2048
 
 export class VM {
@@ -108,6 +110,13 @@ export class VM {
 
         case Opcode.OpPop:
           this.pop()
+          break
+
+        case Opcode.OpTrue:
+          this.push(singleTrue)
+          break
+        case Opcode.OpFalse:
+          this.push(singleFalse)
           break
         // default:
         //   return new Error(`未知操作码: ${op}`)

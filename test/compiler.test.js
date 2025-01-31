@@ -144,8 +144,27 @@ function testIntegerArithmetic() {
   runCompilerTests(tests)
 }
 
+// 测试布尔表达式
+function testBooleanExpressions() {
+  const tests = [
+    {
+      input: 'true',
+      expectedConstants: [],
+      expectedInstructions: [make(Opcode.OpTrue), make(Opcode.OpPop)],
+    },
+    {
+      input: 'false',
+      expectedConstants: [],
+      expectedInstructions: [make(Opcode.OpFalse), make(Opcode.OpPop)],
+    },
+  ]
+
+  runCompilerTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
+  testBooleanExpressions()
 }
 
 main()
