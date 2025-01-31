@@ -5,6 +5,10 @@ const singleTrue = new MonkeyBoolean(true)
 const singleFalse = new MonkeyBoolean(false)
 const StackSize = 2048
 
+function nativeBoolToBooleanObject(bool) {
+  return bool ? singleTrue : singleFalse
+}
+
 export class VM {
   constructor(bytecode) {
     this.constants = bytecode.constants
@@ -88,6 +92,45 @@ export class VM {
     )
   }
 
+  executeIntegerComparison(op, left, right) {
+    const leftValue = left.value
+    const rightValue = right.value
+
+    switch (op) {
+      case Opcode.OpEqual:
+        return this.push(nativeBoolToBooleanObject(rightValue === leftValue))
+      case Opcode.OpNotEqual:
+        return this.push(nativeBoolToBooleanObject(rightValue !== leftValue))
+      case Opcode.OpGreaterThan:
+        return this.push(nativeBoolToBooleanObject(leftValue > rightValue))
+      default:
+        return new Error(`unknown operator: ${op}`)
+    }
+  }
+
+  executeComparison(op) {
+    const right = this.pop()
+    const left = this.pop()
+
+    if (
+      left.type() === MonkeyObjectType.INTEGER &&
+      right.type() === MonkeyObjectType.INTEGER
+    ) {
+      return this.executeIntegerComparison(op, left, right)
+    }
+
+    switch (op) {
+      case Opcode.OpEqual:
+        return this.push(nativeBoolToBooleanObject(right === left))
+      case Opcode.OpNotEqual:
+        return this.push(nativeBoolToBooleanObject(right !== left))
+      default:
+        return new Error(
+          `unknown operator: ${op} (${left.type()} ${right.type()})`
+        )
+    }
+  }
+
   run() {
     for (let ip = 0; ip < this.instructions.length; ip++) {
       const op = this.instructions[ip]
@@ -118,6 +161,17 @@ export class VM {
         case Opcode.OpFalse:
           this.push(singleFalse)
           break
+
+        case Opcode.OpEqual:
+        case Opcode.OpNotEqual:
+        case Opcode.OpGreaterThan: {
+          const err = this.executeComparison(op)
+          if (err) {
+            return err
+          }
+          break
+        }
+
         // default:
         //   return new Error(`未知操作码: ${op}`)
       }

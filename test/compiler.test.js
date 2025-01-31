@@ -157,6 +157,66 @@ function testBooleanExpressions() {
       expectedConstants: [],
       expectedInstructions: [make(Opcode.OpFalse), make(Opcode.OpPop)],
     },
+    {
+      input: '1 > 2',
+      expectedConstants: [1, 2],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpGreaterThan),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: '1 < 2',
+      expectedConstants: [2, 1],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpGreaterThan),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: '1 == 2',
+      expectedConstants: [1, 2],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpEqual),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: '1 != 2',
+      expectedConstants: [1, 2],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpNotEqual),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: 'true == false',
+      expectedConstants: [],
+      expectedInstructions: [
+        make(Opcode.OpTrue),
+        make(Opcode.OpFalse),
+        make(Opcode.OpEqual),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: 'true != false',
+      expectedConstants: [],
+      expectedInstructions: [
+        make(Opcode.OpTrue),
+        make(Opcode.OpFalse),
+        make(Opcode.OpNotEqual),
+        make(Opcode.OpPop),
+      ],
+    },
   ]
 
   runCompilerTests(tests)

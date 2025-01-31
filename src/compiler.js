@@ -38,6 +38,20 @@ export class Compiler {
       }
       this.emit(Opcode.OpPop)
     } else if (node instanceof InfixExpression) {
+      // 如果操作符是小于号，就先编译右值再编译左值
+      if (node.operator === '<') {
+        const errRight = this.compile(node.right)
+        if (errRight) {
+          return errRight
+        }
+        const errLeft = this.compile(node.left)
+        if (errLeft) {
+          return errLeft
+        }
+        this.emit(Opcode.OpGreaterThan)
+        return
+      }
+
       const errLeft = this.compile(node.left)
       if (errLeft) {
         return errLeft
@@ -58,6 +72,15 @@ export class Compiler {
           break
         case '/':
           this.emit(Opcode.OpDiv)
+          break
+        case '>':
+          this.emit(Opcode.OpGreaterThan)
+          break
+        case '==':
+          this.emit(Opcode.OpEqual)
+          break
+        case '!=':
+          this.emit(Opcode.OpNotEqual)
           break
         default:
           return new Error(`unknown operator ${node.operator}`)
