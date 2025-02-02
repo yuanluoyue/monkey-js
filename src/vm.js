@@ -9,6 +9,13 @@ function nativeBoolToBooleanObject(bool) {
   return bool ? singleTrue : singleFalse
 }
 
+function isTruthy(obj) {
+  if (obj instanceof MonkeyBoolean) {
+    return obj.value
+  }
+  return true
+}
+
 export class VM {
   constructor(bytecode) {
     this.constants = bytecode.constants
@@ -206,6 +213,23 @@ export class VM {
           const err = this.executeMinusOperator()
           if (err) {
             return err
+          }
+          break
+        }
+
+        case Opcode.OpJump: {
+          const pos = readUint16(this.instructions.slice(ip + 1))
+          ip = pos - 1
+          break
+        }
+
+        case Opcode.OpJumpNotTruthy: {
+          const pos = readUint16(this.instructions.slice(ip + 1))
+          ip += 2
+
+          const condition = this.pop()
+          if (!isTruthy(condition)) {
+            ip = pos - 1
           }
           break
         }
