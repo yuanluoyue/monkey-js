@@ -1,8 +1,15 @@
-import { MonkeyInteger, MonkeyObjectType, MonkeyBoolean } from './object.js'
+import {
+  MonkeyInteger,
+  MonkeyObjectType,
+  MonkeyBoolean,
+  MonkeyNull,
+} from './object.js'
 import { Opcode, readUint16 } from './code.js'
 
 const singleTrue = new MonkeyBoolean(true)
 const singleFalse = new MonkeyBoolean(false)
+const singleNull = new MonkeyNull()
+
 const StackSize = 2048
 
 function nativeBoolToBooleanObject(bool) {
@@ -12,6 +19,8 @@ function nativeBoolToBooleanObject(bool) {
 function isTruthy(obj) {
   if (obj instanceof MonkeyBoolean) {
     return obj.value
+  } else if (obj instanceof MonkeyNull) {
+    return false
   }
   return true
 }
@@ -145,6 +154,8 @@ export class VM {
       return this.push(singleFalse)
     } else if (operand === singleFalse) {
       return this.push(singleTrue)
+    } else if (operand === singleNull) {
+      return this.push(singleTrue)
     }
     return this.push(singleFalse)
   }
@@ -234,6 +245,9 @@ export class VM {
           break
         }
 
+        case Opcode.OpNull:
+          this.push(singleNull)
+          break
         // default:
         //   return new Error(`未知操作码: ${op}`)
       }

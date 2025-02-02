@@ -251,14 +251,18 @@ function testConditionals() {
         // 0000
         make(Opcode.OpTrue),
         // 0001
-        make(Opcode.OpJumpNotTruthy, 7),
+        make(Opcode.OpJumpNotTruthy, 10),
         // 0004
         make(Opcode.OpConstant, 0),
         // 0007
-        make(Opcode.OpPop),
-        // 0008
-        make(Opcode.OpConstant, 1),
+        make(Opcode.OpJump, 11),
+        // 0010
+        make(Opcode.OpNull),
         // 0011
+        make(Opcode.OpPop),
+        // 0012
+        make(Opcode.OpConstant, 1),
+        // 0015
         make(Opcode.OpPop),
       ],
     },

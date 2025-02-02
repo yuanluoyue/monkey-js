@@ -131,15 +131,14 @@ export class Compiler {
         this.removeLastPop()
       }
 
+      const jumpPos = this.emit(Opcode.OpJump, 9999)
+
+      const afterConsequencePos = this.instructions.length
+      this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+
       if (!node.alternative) {
-        const afterConsequencePos = this.instructions.length
-        this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+        this.emit(Opcode.OpNull)
       } else {
-        const jumpPos = this.emit(Opcode.OpJump, 9999)
-
-        const afterConsequencePos = this.instructions.length
-        this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
-
         const err3 = this.compile(node.alternative)
         if (err3) {
           return err3
@@ -148,10 +147,10 @@ export class Compiler {
         if (this.lastInstructionIsPop()) {
           this.removeLastPop()
         }
-
-        const afterAlternativePos = this.instructions.length
-        this.changeOperand(jumpPos, afterAlternativePos)
       }
+
+      const afterAlternativePos = this.instructions.length
+      this.changeOperand(jumpPos, afterAlternativePos)
     } else if (node instanceof BlockStatement) {
       for (let s of node.statements) {
         const err = this.compile(s)

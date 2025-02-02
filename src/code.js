@@ -14,6 +14,7 @@ export const Opcode = {
   OpBang: 12,
   OpJumpNotTruthy: 13,
   OpJump: 14,
+  OpNull: 15,
 }
 
 class Definition {
@@ -85,6 +86,7 @@ const definitions = {
   [Opcode.OpBang]: new Definition('OpBang', []),
   [Opcode.OpJumpNotTruthy]: new Definition('OpJumpNotTruthy', [2]),
   [Opcode.OpJump]: new Definition('OpJump', [2]),
+  [Opcode.OpNull]: new Definition('OpNull', []),
 }
 
 export function lookup(op) {
