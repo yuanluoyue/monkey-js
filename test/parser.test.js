@@ -513,7 +513,7 @@ const testIfExpression = () => {
 
   testIdentifier(consequence.expression, 'x')
 
-  if (!expression.alternative) {
+  if (expression.alternative) {
     throw new Error(
       `exp.Alternative.Statements was not null. got=${expression.alternative}`
     )

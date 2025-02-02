@@ -5,6 +5,8 @@ import {
   IntegerLiteral,
   BooleanLiteral,
   PrefixExpression,
+  IfExpression,
+  BlockStatement,
 } from '../src/ast.js'
 import { MonkeyInteger, MonkeyBoolean } from '../src/object.js'
 import { make, Opcode, Instructions } from './code.js'
@@ -17,11 +19,21 @@ class Bytecode {
   }
 }
 
+class EmittedInstruction {
+  constructor(opcode = null, position = null) {
+    this.opcode = opcode
+    this.position = position
+  }
+}
+
 export class Compiler {
   constructor() {
     // 初始化指令和常量数组
     this.instructions = new Instructions()
     this.constants = []
+
+    this.lastInstruction = new EmittedInstruction()
+    this.previousInstruction = new EmittedInstruction()
   }
 
   compile(node) {
@@ -103,6 +115,50 @@ export class Compiler {
           return new Error(`unknown operator ${node.operator}`)
       }
       return null
+    } else if (node instanceof IfExpression) {
+      const err = this.compile(node.condition)
+      if (err) {
+        return err
+      }
+      const jumpNotTruthyPos = this.emit(Opcode.OpJumpNotTruthy, 9999)
+
+      const err2 = this.compile(node.consequence)
+      if (err2) {
+        return err2
+      }
+
+      if (this.lastInstructionIsPop()) {
+        this.removeLastPop()
+      }
+
+      if (!node.alternative) {
+        const afterConsequencePos = this.instructions.length
+        this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+      } else {
+        const jumpPos = this.emit(Opcode.OpJump, 9999)
+
+        const afterConsequencePos = this.instructions.length
+        this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+
+        const err3 = this.compile(node.alternative)
+        if (err3) {
+          return err3
+        }
+
+        if (this.lastInstructionIsPop()) {
+          this.removeLastPop()
+        }
+
+        const afterAlternativePos = this.instructions.length
+        this.changeOperand(jumpPos, afterAlternativePos)
+      }
+    } else if (node instanceof BlockStatement) {
+      for (let s of node.statements) {
+        const err = this.compile(s)
+        if (err) {
+          return err
+        }
+      }
     } else if (node instanceof IntegerLiteral) {
       // 处理整数字面量
       const integer = new MonkeyInteger(node.value)
@@ -128,7 +184,43 @@ export class Compiler {
   emit(op, ...operands) {
     const ins = make(op, ...operands)
     const pos = this.addInstruction(ins)
+    this.setLastInstruction(op, pos)
     return pos
+  }
+
+  replaceInstruction(pos, newInstruction) {
+    for (let i = 0; i < newInstruction.length; i++) {
+      this.instructions[pos + i] = newInstruction[i]
+    }
+  }
+
+  setLastInstruction(op, pos) {
+    const previous = this.lastInstruction
+    const last = new EmittedInstruction(op, pos)
+
+    this.previousInstruction = previous
+    this.lastInstruction = last
+  }
+
+  changeOperand(opPos, operand) {
+    const op = this.instructions[opPos]
+    const newInstruction = make(op, operand)
+
+    this.replaceInstruction(opPos, newInstruction)
+  }
+
+  lastInstructionIsPop() {
+    return this.lastInstruction.opcode === Opcode.OpPop
+  }
+
+  removeLastPop() {
+    if (this.lastInstructionIsPop()) {
+      this.instructions = this.instructions.slice(
+        0,
+        this.lastInstruction.position
+      )
+      this.lastInstruction = this.previousInstruction
+    }
   }
 
   // addInstruction 方法用于将指令添加到指令列表中，并返回新指令的位置

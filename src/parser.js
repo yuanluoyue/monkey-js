@@ -364,8 +364,6 @@ export class Parser {
       }
 
       expression.alternative = this.parseBlockStatement()
-    } else {
-      expression.alternative = new BlockStatement()
     }
 
     return expression

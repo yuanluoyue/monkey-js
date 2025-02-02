@@ -240,9 +240,61 @@ function testBooleanExpressions() {
   runCompilerTests(tests)
 }
 
+function testConditionals() {
+  const tests = [
+    {
+      input: `
+          if (true) { 10 }; 3333;
+          `,
+      expectedConstants: [10, 3333],
+      expectedInstructions: [
+        // 0000
+        make(Opcode.OpTrue),
+        // 0001
+        make(Opcode.OpJumpNotTruthy, 7),
+        // 0004
+        make(Opcode.OpConstant, 0),
+        // 0007
+        make(Opcode.OpPop),
+        // 0008
+        make(Opcode.OpConstant, 1),
+        // 0011
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: `
+      if (true) { 10 } else { 20 }; 3333;
+      `,
+      expectedConstants: [10, 20, 3333],
+      expectedInstructions: [
+        // 0000
+        make(Opcode.OpTrue),
+        // 0001
+        make(Opcode.OpJumpNotTruthy, 10),
+        // 0004
+        make(Opcode.OpConstant, 0),
+        // 0007
+        make(Opcode.OpJump, 13),
+        // 0010
+        make(Opcode.OpConstant, 1),
+        // 0013
+        make(Opcode.OpPop),
+        // 0014
+        make(Opcode.OpConstant, 2),
+        // 0017
+        make(Opcode.OpPop),
+      ],
+    },
+  ]
+
+  runCompilerTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
+  testConditionals()
 }
 
 main()
