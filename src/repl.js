@@ -3,6 +3,7 @@ import { Lexer } from './lexer.js'
 import { Parser } from './parser.js'
 import { Compiler } from '../src/compiler.js'
 import { VM } from '../src/vm.js'
+import { SymbolTable } from '../src/symbolTable.js'
 import { evalMonkey, newEnvironment } from './evaluator.js'
 import { defineMacros, expandMacros } from '../src/marco.js'
 
@@ -38,6 +39,10 @@ export const startRepl = (
     prompt: PROMPT,
   })
 
+  let constants = []
+  let globals = new Array(65536).fill(null)
+  let symbolTable = new SymbolTable()
+
   rl.prompt()
 
   rl.on('line', (line) => {
@@ -51,13 +56,13 @@ export const startRepl = (
       return
     }
 
-    const comp = new Compiler()
+    const comp = new Compiler(constants, symbolTable)
     const compileErr = comp.compile(program)
     if (compileErr) {
       console.error(`Woops! Compilation failed:\n ${compileErr}`)
     }
 
-    const machine = new VM(comp.bytecode())
+    const machine = new VM(comp.bytecode(), globals)
     const runErr = machine.run()
     if (runErr) {
       console.error(`Woops! Executing bytecode failed:\n ${runErr}`)

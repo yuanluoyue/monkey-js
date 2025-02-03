@@ -156,10 +156,21 @@ function testConditionals() {
   runVmTests(tests)
 }
 
+function testGlobalLetStatements() {
+  const tests = [
+    { input: 'let one = 1; one', expected: 1 },
+    { input: 'let one = 1; let two = 2; one + two', expected: 3 },
+    { input: 'let one = 1; let two = one + one; one + two', expected: 3 },
+  ]
+
+  runVmTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
   testConditionals()
+  testGlobalLetStatements()
 }
 
 main()

@@ -10,6 +10,7 @@ const singleTrue = new MonkeyBoolean(true)
 const singleFalse = new MonkeyBoolean(false)
 const singleNull = new MonkeyNull()
 
+const GlobalsSize = 65536
 const StackSize = 2048
 
 function nativeBoolToBooleanObject(bool) {
@@ -26,11 +27,12 @@ function isTruthy(obj) {
 }
 
 export class VM {
-  constructor(bytecode) {
+  constructor(bytecode, globals) {
     this.constants = bytecode.constants
     this.instructions = bytecode.instructions
 
     this.stack = new Array(StackSize).fill(null)
+    this.globals = globals || new Array(GlobalsSize).fill(null)
     this.sp = 0
   }
 
@@ -248,6 +250,24 @@ export class VM {
         case Opcode.OpNull:
           this.push(singleNull)
           break
+
+        case Opcode.OpSetGlobal: {
+          const globalIndex = readUint16(this.instructions.slice(ip + 1))
+          ip += 2
+          this.globals[globalIndex] = this.pop()
+          break
+        }
+
+        case Opcode.OpGetGlobal: {
+          const globalIndex = readUint16(this.instructions.slice(ip + 1))
+          ip += 2
+          const err = this.push(this.globals[globalIndex])
+          if (err) {
+            return err
+          }
+          break
+        }
+
         // default:
         //   return new Error(`未知操作码: ${op}`)
       }

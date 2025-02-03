@@ -30,15 +30,15 @@ class EmittedInstruction {
 }
 
 export class Compiler {
-  constructor() {
+  constructor(constants, symbolTable) {
     // 初始化指令和常量数组
     this.instructions = new Instructions()
-    this.constants = []
+    this.constants = constants || []
 
     this.lastInstruction = new EmittedInstruction()
     this.previousInstruction = new EmittedInstruction()
 
-    this.symbolTable = new SymbolTable()
+    this.symbolTable = symbolTable || new SymbolTable()
   }
 
   compile(node) {
