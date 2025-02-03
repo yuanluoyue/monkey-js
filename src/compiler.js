@@ -7,9 +7,12 @@ import {
   PrefixExpression,
   IfExpression,
   BlockStatement,
+  LetStatement,
+  Identifier,
 } from '../src/ast.js'
 import { MonkeyInteger, MonkeyBoolean } from '../src/object.js'
 import { make, Opcode, Instructions } from './code.js'
+import { SymbolTable } from './symbolTable.js'
 
 class Bytecode {
   constructor(instructions, constants) {
@@ -34,6 +37,8 @@ export class Compiler {
 
     this.lastInstruction = new EmittedInstruction()
     this.previousInstruction = new EmittedInstruction()
+
+    this.symbolTable = new SymbolTable()
   }
 
   compile(node) {
@@ -158,6 +163,23 @@ export class Compiler {
           return err
         }
       }
+    } else if (node instanceof LetStatement) {
+      const err = this.compile(node.value)
+      if (err) {
+        return err
+      }
+
+      const symbol = this.symbolTable.define(node.name.value)
+
+      this.emit(Opcode.OpSetGlobal, symbol.index)
+    } else if (node instanceof Identifier) {
+      const symbol = this.symbolTable.resolve(node.value)
+
+      if (!symbol) {
+        console.error(`undefined variable ${node.value}`)
+      }
+
+      this.emit(Opcode.OpGetGlobal, symbol.index)
     } else if (node instanceof IntegerLiteral) {
       // 处理整数字面量
       const integer = new MonkeyInteger(node.value)

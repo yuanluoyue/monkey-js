@@ -295,10 +295,60 @@ function testConditionals() {
   runCompilerTests(tests)
 }
 
+function testGlobalLetStatements() {
+  const tests = [
+    {
+      input: `
+            let one = 1;
+            let two = 2;
+        `,
+      expectedConstants: [1, 2],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpSetGlobal, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpSetGlobal, 1),
+      ],
+    },
+    {
+      input: `
+            let one = 1;
+            one;
+        `,
+      expectedConstants: [1],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpSetGlobal, 0),
+        make(Opcode.OpGetGlobal, 0),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: `
+            let one = 1;
+            let two = one;
+            two;
+        `,
+      expectedConstants: [1],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpSetGlobal, 0),
+        make(Opcode.OpGetGlobal, 0),
+        make(Opcode.OpSetGlobal, 1),
+        make(Opcode.OpGetGlobal, 1),
+        make(Opcode.OpPop),
+      ],
+    },
+  ]
+
+  runCompilerTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
   testConditionals()
+  testGlobalLetStatements()
 }
 
 main()
