@@ -11,6 +11,7 @@ import {
   MonkeyBoolean,
   MonkeyNull,
   MonkeyString,
+  MonkeyArray,
 } from '../src/object.js'
 import { evalMonkey } from '../src/evaluator.js'
 
@@ -175,6 +176,30 @@ export function testStringObject(actual, expected) {
   }
 
   return null
+}
+
+export function testArrayObject(actual, expected) {
+  if (Array.isArray(expected)) {
+    if (!(actual instanceof MonkeyArray)) {
+      console.error(
+        `Object is not an array: ${actual?.constructor?.name} (${JSON.stringify(
+          actual
+        )})`
+      )
+      return
+    }
+
+    if (actual.elements.length !== expected.length) {
+      console.error(
+        `Wrong number of elements. Expected: ${expected.length}, Got: ${actual?.elements?.length}`
+      )
+      return
+    }
+
+    for (let i = 0; i < expected.length; i++) {
+      testIntegerObject(actual?.elements?.[i], expected?.[i])
+    }
+  }
 }
 
 export const testEval = (input) => {

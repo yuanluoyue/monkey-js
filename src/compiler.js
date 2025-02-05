@@ -10,6 +10,7 @@ import {
   LetStatement,
   Identifier,
   StringLiteral,
+  ArrayLiteral,
 } from '../src/ast.js'
 import { MonkeyInteger, MonkeyBoolean, MonkeyString } from '../src/object.js'
 import { make, Opcode, Instructions } from './code.js'
@@ -196,7 +197,16 @@ export class Compiler {
       const str = new MonkeyString(node.value)
       const constantIndex = this.addConstant(str)
       this.emit(Opcode.OpConstant, constantIndex)
+    } else if (node instanceof ArrayLiteral) {
+      for (let el of node.elements) {
+        const err = this.compile(el)
+        if (err) {
+          return err
+        }
+      }
+      this.emit(Opcode.OpArray, node.elements.length)
     }
+
     return null
   }
 

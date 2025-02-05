@@ -4,6 +4,7 @@ import {
   MonkeyBoolean,
   MonkeyNull,
   MonkeyString,
+  MonkeyArray,
 } from './object.js'
 import { Opcode, readUint16 } from './code.js'
 
@@ -191,6 +192,11 @@ export class VM {
     return this.push(new MonkeyInteger(-value))
   }
 
+  buildArray(startIndex, endIndex) {
+    const elements = this.stack.slice(startIndex, endIndex)
+    return new MonkeyArray(elements)
+  }
+
   run() {
     for (let ip = 0; ip < this.instructions.length; ip++) {
       const op = this.instructions[ip]
@@ -280,6 +286,20 @@ export class VM {
           const globalIndex = readUint16(this.instructions.slice(ip + 1))
           ip += 2
           const err = this.push(this.globals[globalIndex])
+          if (err) {
+            return err
+          }
+          break
+        }
+
+        case Opcode.OpArray: {
+          const numElements = readUint16(this.instructions.slice(ip + 1))
+          ip += 2
+
+          const array = this.buildArray(this.sp - numElements, this.sp)
+          this.sp = this.sp - numElements
+
+          const err = this.push(array)
           if (err) {
             return err
           }

@@ -6,6 +6,7 @@ import {
   testBooleanObject,
   testNullObject,
   testStringObject,
+  testArrayObject,
   parse,
 } from './utils.js'
 
@@ -18,6 +19,8 @@ function testExpectedObject(expected, actual) {
     testNullObject(actual)
   } else if (typeof expected === 'string') {
     testStringObject(actual, expected)
+  }else if (Array.isArray(expected)) {
+    testArrayObject(actual, expected)
   }
 }
 
@@ -180,12 +183,23 @@ function testStringExpressions() {
   runVmTests(tests)
 }
 
+function testArrayLiterals() {
+  const tests = [
+    { input: '[]', expected: [] },
+    { input: '[1, 2, 3]', expected: [1, 2, 3] },
+    { input: '[1 + 2, 3 * 4, 5 + 6]', expected: [3, 12, 11] },
+  ]
+
+  runVmTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
   testConditionals()
   testGlobalLetStatements()
   testStringExpressions()
+  testArrayLiterals()
 }
 
 main()
