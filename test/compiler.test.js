@@ -1,6 +1,6 @@
 import { Compiler } from '../src/compiler.js'
 import { make, Opcode, Instructions } from '../src/code.js'
-import { testIntegerObject, parse } from './utils.js'
+import { testIntegerObject, testStringObject, parse } from './utils.js'
 
 function concatInstructions(s) {
   let out = new Instructions()
@@ -47,6 +47,8 @@ function testConstants(expected, actual) {
     const constant = expected[i]
     if (typeof constant === 'number') {
       testIntegerObject(actual[i], constant)
+    } else if (typeof constant === 'string') {
+      testStringObject(actual[i], constant)
     }
   }
 
@@ -344,11 +346,34 @@ function testGlobalLetStatements() {
   runCompilerTests(tests)
 }
 
+function testStringExpressions() {
+  const tests = [
+    {
+      input: `"monkey"`,
+      expectedConstants: ['monkey'],
+      expectedInstructions: [make(Opcode.OpConstant, 0), make(Opcode.OpPop)],
+    },
+    {
+      input: `"mon" + "key"`,
+      expectedConstants: ['mon', 'key'],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpAdd),
+        make(Opcode.OpPop),
+      ],
+    },
+  ]
+
+  runCompilerTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
   testConditionals()
   testGlobalLetStatements()
+  testStringExpressions()
 }
 
 main()

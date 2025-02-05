@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "repl": "node ./src/main.js",
-    "test": "node ./test/lexer.test.js; node ./test/parser.test.js; node ./test/evaluator.test.js; node ./test/modify.test.js;",
+    "test": "npm run test:interpreter; npm run test:compiler;",
+    "test:interpreter": "node ./test/lexer.test.js; node ./test/parser.test.js; node ./test/evaluator.test.js; node ./test/modify.test.js;",
     "test:compiler": " node ./test/code.test.js; node ./test/compiler.test.js; node ./test/vm.test.js; node ./test/symbolTable.test.js;"
   },
   "keywords": [],

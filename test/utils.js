@@ -6,7 +6,12 @@ import {
   BooleanLiteral,
   Identifier,
 } from '../src/ast.js'
-import { MonkeyInteger, MonkeyBoolean, MonkeyNull } from '../src/object.js'
+import {
+  MonkeyInteger,
+  MonkeyBoolean,
+  MonkeyNull,
+  MonkeyString,
+} from '../src/object.js'
 import { evalMonkey } from '../src/evaluator.js'
 
 export const checkParserErrors = (parser) => {
@@ -152,6 +157,24 @@ export const testNullObject = (obj) => {
     throw new Error(`object is not NULL. got=${typeof obj} (${obj})`)
   }
   return true
+}
+
+export function testStringObject(actual, expected) {
+  if (!(actual instanceof MonkeyString)) {
+    return new Error(
+      `object is not String. got=${actual.constructor.name} (${JSON.stringify(
+        actual
+      )})`
+    )
+  }
+
+  if (actual.value !== expected) {
+    return new Error(
+      `object has wrong value. got="${actual.value}", want="${expected}"`
+    )
+  }
+
+  return null
 }
 
 export const testEval = (input) => {

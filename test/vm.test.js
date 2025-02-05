@@ -5,6 +5,7 @@ import {
   testIntegerObject,
   testBooleanObject,
   testNullObject,
+  testStringObject,
   parse,
 } from './utils.js'
 
@@ -15,6 +16,8 @@ function testExpectedObject(expected, actual) {
     testBooleanObject(actual, expected)
   } else if (expected === null) {
     testNullObject(actual)
+  } else if (typeof expected === 'string') {
+    testStringObject(actual, expected)
   }
 }
 
@@ -166,11 +169,23 @@ function testGlobalLetStatements() {
   runVmTests(tests)
 }
 
+// 测试字符串表达式
+function testStringExpressions() {
+  const tests = [
+    { input: '"monkey"', expected: 'monkey' },
+    { input: '"mon" + "key"', expected: 'monkey' },
+    { input: '"mon" + "key" + "banana"', expected: 'monkeybanana' },
+  ]
+
+  runVmTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
   testConditionals()
   testGlobalLetStatements()
+  testStringExpressions()
 }
 
 main()

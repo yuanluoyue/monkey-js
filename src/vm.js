@@ -3,6 +3,7 @@ import {
   MonkeyObjectType,
   MonkeyBoolean,
   MonkeyNull,
+  MonkeyString,
 } from './object.js'
 import { Opcode, readUint16 } from './code.js'
 
@@ -91,6 +92,18 @@ export class VM {
     return this.push(new MonkeyInteger(result))
   }
 
+  executeBinaryStringOperation(op, left, right) {
+    if (op !== Opcode.OpAdd) {
+      return new Error(`unknown string operator: ${op}`)
+    }
+
+    const leftValue = left.value
+    const rightValue = right.value
+
+    const result = new MonkeyString(leftValue + rightValue)
+    return this.push(result)
+  }
+
   executeBinaryOperation(op) {
     const right = this.pop()
     const left = this.pop()
@@ -103,6 +116,11 @@ export class VM {
       rightType === MonkeyObjectType.INTEGER
     ) {
       return this.executeBinaryIntegerOperation(op, left, right)
+    } else if (
+      leftType === MonkeyObjectType.STRING &&
+      rightType === MonkeyObjectType.STRING
+    ) {
+      return this.executeBinaryStringOperation(op, left, right)
     }
 
     return new Error(

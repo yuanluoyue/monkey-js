@@ -9,8 +9,9 @@ import {
   BlockStatement,
   LetStatement,
   Identifier,
+  StringLiteral,
 } from '../src/ast.js'
-import { MonkeyInteger, MonkeyBoolean } from '../src/object.js'
+import { MonkeyInteger, MonkeyBoolean, MonkeyString } from '../src/object.js'
 import { make, Opcode, Instructions } from './code.js'
 import { SymbolTable } from './symbolTable.js'
 
@@ -191,6 +192,10 @@ export class Compiler {
       } else {
         this.emit(Opcode.OpFalse)
       }
+    } else if (node instanceof StringLiteral) {
+      const str = new MonkeyString(node.value)
+      const constantIndex = this.addConstant(str)
+      this.emit(Opcode.OpConstant, constantIndex)
     }
     return null
   }
