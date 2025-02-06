@@ -12,6 +12,7 @@ import {
   StringLiteral,
   ArrayLiteral,
   HashLiteral,
+  IndexExpression,
 } from '../src/ast.js'
 import { MonkeyInteger, MonkeyBoolean, MonkeyString } from '../src/object.js'
 import { make, Opcode, Instructions } from './code.js'
@@ -230,6 +231,18 @@ export class Compiler {
       }
 
       this.emit(Opcode.OpHash, keys.length * 2)
+    } else if (node instanceof IndexExpression) {
+      const leftErr = this.compile(node.left)
+      if (leftErr) {
+        return leftErr
+      }
+
+      const indexErr = this.compile(node.index)
+      if (indexErr) {
+        return indexErr
+      }
+
+      this.emit(Opcode.OpIndex)
     }
 
     return null

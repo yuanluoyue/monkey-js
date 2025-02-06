@@ -212,6 +212,53 @@ export class VM {
     return new MonkeyHash(hashedPairs)
   }
 
+  executeIndexExpression(left, index) {
+    if (
+      left.type() === MonkeyObjectType.ARRAY &&
+      index.type() === MonkeyObjectType.INTEGER
+    ) {
+      return this.executeArrayIndex(left, index)
+    } else if (left.type() === MonkeyObjectType.HASH) {
+      return this.executeHashIndex(left, index)
+    } else {
+      return new Error(`index operator not supported: ${left.type()}`)
+    }
+  }
+
+  executeArrayIndex(array, index) {
+    if (!(array instanceof MonkeyArray) || !(index instanceof MonkeyInteger)) {
+      throw new Error('Invalid types for array index operation')
+    }
+    const i = index.value
+    const max = array.elements.length - 1
+
+    if (i < 0 || i > max) {
+      return this.push(singleNull)
+    }
+
+    return this.push(array.elements[i])
+  }
+
+  executeHashIndex(hash, index) {
+    if (!(hash instanceof MonkeyHash)) {
+      return new Error(`Invalid hash object type: ${typeof hash}`)
+    }
+    if (!index.hashKey) {
+      return new Error(
+        `unusable as hash key: ${index.type ? index.type() : typeof index}`
+      )
+    }
+
+    const hashKey = index.hashKey()
+    const pair = hash.pairs[hashKey]
+
+    if (!pair) {
+      return this.push(singleNull)
+    }
+
+    return this.push(pair)
+  }
+
   run() {
     for (let ip = 0; ip < this.instructions.length; ip++) {
       const op = this.instructions[ip]
@@ -332,6 +379,17 @@ export class VM {
           const pushErr = this.push(hash)
           if (pushErr) {
             return pushErr
+          }
+          break
+        }
+
+        case Opcode.OpIndex: {
+          const index = this.pop()
+          const left = this.pop()
+
+          const err = this.executeIndexExpression(left, index)
+          if (err) {
+            return err
           }
           break
         }

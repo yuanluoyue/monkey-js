@@ -449,6 +449,42 @@ function testHashLiterals() {
   runCompilerTests(tests)
 }
 
+function testIndexExpressions() {
+  const tests = [
+    {
+      input: '[1, 2, 3][1 + 1]',
+      expectedConstants: [1, 2, 3, 1, 1],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpConstant, 2),
+        make(Opcode.OpArray, 3),
+        make(Opcode.OpConstant, 3),
+        make(Opcode.OpConstant, 4),
+        make(Opcode.OpAdd),
+        make(Opcode.OpIndex),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: '{1: 2}[2 - 1]',
+      expectedConstants: [1, 2, 2, 1],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpHash, 2),
+        make(Opcode.OpConstant, 2),
+        make(Opcode.OpConstant, 3),
+        make(Opcode.OpSub),
+        make(Opcode.OpIndex),
+        make(Opcode.OpPop),
+      ],
+    },
+  ]
+
+  runCompilerTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
@@ -457,6 +493,7 @@ function main() {
   testStringExpressions()
   testArrayLiterals()
   testHashLiterals()
+  testIndexExpressions()
 }
 
 main()
