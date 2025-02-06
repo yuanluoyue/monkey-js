@@ -12,6 +12,7 @@ import {
   MonkeyNull,
   MonkeyString,
   MonkeyArray,
+  MonkeyHash,
 } from '../src/object.js'
 import { evalMonkey } from '../src/evaluator.js'
 
@@ -199,6 +200,36 @@ export function testArrayObject(actual, expected) {
     for (let i = 0; i < expected.length; i++) {
       testIntegerObject(actual?.elements?.[i], expected?.[i])
     }
+  }
+}
+
+export function testHashObject(actual, expected) {
+  if (!(actual instanceof MonkeyHash)) {
+    console.error(
+      `object is not Hash. got ${actual?.constructor?.name} (${JSON.stringify(
+        actual
+      )})`
+    )
+    return
+  }
+
+  if (Object.keys(actual?.pairs).length !== Object.keys(expected).length) {
+    console.error(
+      `hash has wrong number of Pairs. want= ${
+        Object.keys(expected).length
+      }, got= ${Object.keys(actual.pairs).length}`
+    )
+    return
+  }
+
+  for (const expectedKey in expected) {
+    const pair = actual.pairs[expectedKey]
+    if (!pair) {
+      console.error(`no pair for given key in Pairs`)
+      continue
+    }
+
+    testIntegerObject(pair, expected[expectedKey])
   }
 }
 

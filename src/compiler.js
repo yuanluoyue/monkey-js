@@ -11,6 +11,7 @@ import {
   Identifier,
   StringLiteral,
   ArrayLiteral,
+  HashLiteral,
 } from '../src/ast.js'
 import { MonkeyInteger, MonkeyBoolean, MonkeyString } from '../src/object.js'
 import { make, Opcode, Instructions } from './code.js'
@@ -205,6 +206,30 @@ export class Compiler {
         }
       }
       this.emit(Opcode.OpArray, node.elements.length)
+    } else if (node instanceof HashLiteral) {
+      const keys = []
+
+      node.pairs.forEach((v, k) => {
+        keys.push(k)
+      })
+
+      keys.sort((i, j) => {
+        return i.value < j.value ? -1 : 1
+      })
+
+      for (const k of keys) {
+        const err = this.compile(k)
+        if (err) {
+          return err
+        }
+        const value = node.pairs.get(k)
+        const valueErr = this.compile(value)
+        if (valueErr) {
+          return valueErr
+        }
+      }
+
+      this.emit(Opcode.OpHash, keys.length * 2)
     }
 
     return null

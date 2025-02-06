@@ -5,6 +5,7 @@ import {
   MonkeyNull,
   MonkeyString,
   MonkeyArray,
+  MonkeyHash,
 } from './object.js'
 import { Opcode, readUint16 } from './code.js'
 
@@ -197,6 +198,20 @@ export class VM {
     return new MonkeyArray(elements)
   }
 
+  buildHash(startIndex, endIndex) {
+    const hashedPairs = {}
+
+    for (let i = startIndex; i < endIndex; i += 2) {
+      const key = this.stack[i]
+      const value = this.stack[i + 1]
+
+      const hashKey = key.hashKey()
+      hashedPairs[hashKey] = value
+    }
+
+    return new MonkeyHash(hashedPairs)
+  }
+
   run() {
     for (let ip = 0; ip < this.instructions.length; ip++) {
       const op = this.instructions[ip]
@@ -302,6 +317,21 @@ export class VM {
           const err = this.push(array)
           if (err) {
             return err
+          }
+          break
+        }
+
+        case Opcode.OpHash: {
+          const numElements = readUint16(this.instructions.slice(ip + 1))
+          ip += 2
+
+          const hash = this.buildHash(this.sp - numElements, this.sp)
+
+          this.sp = this.sp - numElements
+
+          const pushErr = this.push(hash)
+          if (pushErr) {
+            return pushErr
           }
           break
         }

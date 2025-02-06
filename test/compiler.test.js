@@ -408,6 +408,47 @@ function testArrayLiterals() {
   runCompilerTests(tests)
 }
 
+function testHashLiterals() {
+  const tests = [
+    {
+      input: '{}',
+      expectedConstants: [],
+      expectedInstructions: [make(Opcode.OpHash, 0), make(Opcode.OpPop)],
+    },
+    {
+      input: '{1: 2, 3: 4, 5: 6}',
+      expectedConstants: [1, 2, 3, 4, 5, 6],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpConstant, 2),
+        make(Opcode.OpConstant, 3),
+        make(Opcode.OpConstant, 4),
+        make(Opcode.OpConstant, 5),
+        make(Opcode.OpHash, 6),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: '{ 1: 2 + 3, 4: 5 * 6 }',
+      expectedConstants: [1, 2, 3, 4, 5, 6],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpConstant, 2),
+        make(Opcode.OpAdd),
+        make(Opcode.OpConstant, 3),
+        make(Opcode.OpConstant, 4),
+        make(Opcode.OpConstant, 5),
+        make(Opcode.OpMul),
+        make(Opcode.OpHash, 4),
+        make(Opcode.OpPop),
+      ],
+    },
+  ]
+  runCompilerTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
@@ -415,6 +456,7 @@ function main() {
   testGlobalLetStatements()
   testStringExpressions()
   testArrayLiterals()
+  testHashLiterals()
 }
 
 main()

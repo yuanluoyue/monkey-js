@@ -1,4 +1,5 @@
 import { Compiler } from '../src/compiler.js'
+import { MonkeyInteger } from '../src/object.js'
 import { VM } from '../src/vm.js'
 
 import {
@@ -7,6 +8,7 @@ import {
   testNullObject,
   testStringObject,
   testArrayObject,
+  testHashObject,
   parse,
 } from './utils.js'
 
@@ -19,8 +21,10 @@ function testExpectedObject(expected, actual) {
     testNullObject(actual)
   } else if (typeof expected === 'string') {
     testStringObject(actual, expected)
-  }else if (Array.isArray(expected)) {
+  } else if (Array.isArray(expected)) {
     testArrayObject(actual, expected)
+  } else if (typeof expected === 'object' && expected !== null) {
+    testHashObject(actual, expected)
   }
 }
 
@@ -193,6 +197,28 @@ function testArrayLiterals() {
   runVmTests(tests)
 }
 
+function testHashLiterals() {
+  const tests = [
+    { input: '{}', expected: {} },
+    {
+      input: '{1: 2, 2: 3}',
+      expected: {
+        [new MonkeyInteger(1).hashKey()]: 2,
+        [new MonkeyInteger(2).hashKey()]: 3,
+      },
+    },
+    {
+      input: '{1 + 1: 2 * 2, 3 + 3: 4 * 4}',
+      expected: {
+        [new MonkeyInteger(2).hashKey()]: 4,
+        [new MonkeyInteger(6).hashKey()]: 16,
+      },
+    },
+  ]
+
+  runVmTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
@@ -200,6 +226,7 @@ function main() {
   testGlobalLetStatements()
   testStringExpressions()
   testArrayLiterals()
+  testHashLiterals()
 }
 
 main()
