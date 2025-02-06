@@ -1,5 +1,6 @@
 import { Compiler } from '../src/compiler.js'
 import { make, Opcode, Instructions } from '../src/code.js'
+import { CompiledFunction } from '../src/object.js'
 import { testIntegerObject, testStringObject, parse } from './utils.js'
 
 function concatInstructions(s) {
@@ -49,6 +50,22 @@ function testConstants(expected, actual) {
       testIntegerObject(actual[i], constant)
     } else if (typeof constant === 'string') {
       testStringObject(actual[i], constant)
+    } else if (
+      Array.isArray(constant) &&
+      constant.every((item) => Array.isArray(item))
+    ) {
+      const fn = actual[i]
+      if (!(fn instanceof CompiledFunction)) {
+        return new Error(`constant ${i} - not a function: ${typeof fn}`)
+      }
+
+      const err = testInstructions(constant, fn.instructions)
+
+      if (err) {
+        return new Error(
+          `constant ${i} - testInstructions failed: ${err.message}`
+        )
+      }
     }
   }
 
@@ -485,6 +502,121 @@ function testIndexExpressions() {
   runCompilerTests(tests)
 }
 
+function testFunctions() {
+  const tests = [
+    {
+      input: 'fn() { return 5 + 10 }',
+      expectedConstants: [
+        5,
+        10,
+        [
+          make(Opcode.OpConstant, 0),
+          make(Opcode.OpConstant, 1),
+          make(Opcode.OpAdd),
+          make(Opcode.OpReturnValue),
+        ],
+      ],
+      expectedInstructions: [make(Opcode.OpConstant, 2), make(Opcode.OpPop)],
+    },
+    {
+      input: 'fn() { 5 + 10 }',
+      expectedConstants: [
+        5,
+        10,
+        [
+          make(Opcode.OpConstant, 0),
+          make(Opcode.OpConstant, 1),
+          make(Opcode.OpAdd),
+          make(Opcode.OpReturnValue),
+        ],
+      ],
+      expectedInstructions: [make(Opcode.OpConstant, 2), make(Opcode.OpPop)],
+    },
+    {
+      input: 'fn() { 1; 2 }',
+      expectedConstants: [
+        1,
+        2,
+        [
+          make(Opcode.OpConstant, 0),
+          make(Opcode.OpPop),
+          make(Opcode.OpConstant, 1),
+          make(Opcode.OpReturnValue),
+        ],
+      ],
+      expectedInstructions: [make(Opcode.OpConstant, 2), make(Opcode.OpPop)],
+    },
+    {
+      input: 'fn() { }',
+      expectedConstants: [[make(Opcode.OpReturn)]],
+      expectedInstructions: [make(Opcode.OpConstant, 0), make(Opcode.OpPop)],
+    },
+  ]
+
+  runCompilerTests(tests)
+}
+
+function testCompilerScopes() {
+  const compiler = new Compiler()
+
+  if (compiler.scopeIndex !== 0) {
+    console.error(`scopeIndex wrong. got=${compiler.scopeIndex}, want=0`)
+  }
+
+  compiler.emit(Opcode.OpMul)
+
+  compiler.enterScope()
+  if (compiler.scopeIndex !== 1) {
+    console.error(`scopeIndex wrong. got=${compiler.scopeIndex}, want=1`)
+  }
+
+  compiler.emit(Opcode.OpSub)
+
+  if (compiler.scopes[compiler.scopeIndex].instructions.length !== 1) {
+    console.error(
+      `instructions length wrong. got=${
+        compiler.scopes[compiler.scopeIndex].instructions.length
+      }`
+    )
+  }
+
+  const last = compiler.scopes[compiler.scopeIndex].lastInstruction
+  if (last.opcode !== Opcode.OpSub) {
+    console.error(
+      `lastInstruction.opcode wrong. got=${last.opcode}, want=${Opcode.OpSub}`
+    )
+  }
+
+  compiler.leaveScope()
+  if (compiler.scopeIndex !== 0) {
+    console.error(`scopeIndex wrong. got=${compiler.scopeIndex}, want=0`)
+  }
+
+  compiler.emit(Opcode.OpAdd)
+
+  if (compiler.scopes[compiler.scopeIndex].instructions.length !== 2) {
+    console.error(
+      `instructions length wrong. got=${
+        compiler.scopes[compiler.scopeIndex].instructions.length
+      }`
+    )
+  }
+
+  const lastAfterLeave = compiler.scopes[compiler.scopeIndex].lastInstruction
+  if (lastAfterLeave.opcode !== Opcode.OpAdd) {
+    console.error(
+      `lastInstruction.opcode wrong. got=${lastAfterLeave.opcode}, want=${Opcode.OpAdd}`
+    )
+  }
+
+  const previous = compiler.scopes[compiler.scopeIndex].previousInstruction
+  if (previous.opcode !== Opcode.OpMul) {
+    console.error(
+      `previousInstruction.opcode wrong. got=${previous.opcode}, want=${Opcode.OpMul}`
+    )
+  }
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
@@ -494,6 +626,8 @@ function main() {
   testArrayLiterals()
   testHashLiterals()
   testIndexExpressions()
+  testFunctions()
+  testCompilerScopes()
 }
 
 main()

@@ -11,6 +11,7 @@ export const MonkeyObjectType = {
   HASH: 'HASH',
   QUOTE: 'QUOTE',
   MACRO: 'MACRO',
+  COMPILED_FUNCTION_OBJ: 'COMPILED_FUNCTION_OBJ',
 }
 
 export class MonkeyInteger {
@@ -261,5 +262,19 @@ export class Macro {
     out += '\n}'
 
     return out
+  }
+}
+
+export class CompiledFunction {
+  constructor(instructions) {
+    this.instructions = instructions
+  }
+
+  type() {
+    return MonkeyObjectType.COMPILED_FUNCTION_OBJ
+  }
+
+  inspect() {
+    return `CompiledFunction[${this.instructions.toString()}]`
   }
 }

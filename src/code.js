@@ -20,6 +20,9 @@ export const Opcode = {
   OpArray: 18,
   OpHash: 19,
   OpIndex: 20,
+  OpCall: 21,
+  OpReturnValue: 22,
+  OpReturn: 23,
 }
 
 class Definition {
@@ -97,6 +100,9 @@ const definitions = {
   [Opcode.OpArray]: new Definition('OpArray', [2]),
   [Opcode.OpHash]: new Definition('OpHash', [2]),
   [Opcode.OpIndex]: new Definition('OpIndex', []),
+  [Opcode.OpCall]: new Definition('OpCall', []),
+  [Opcode.OpReturnValue]: new Definition('OpReturnValue', []),
+  [Opcode.OpReturn]: new Definition('OpReturn', []),
 }
 
 export function lookup(op) {
