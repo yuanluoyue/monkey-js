@@ -15,6 +15,7 @@ import {
   IndexExpression,
   FunctionLiteral,
   ReturnStatement,
+  CallExpression,
 } from '../src/ast.js'
 import { MonkeyInteger, MonkeyString, CompiledFunction } from '../src/object.js'
 import { make, Opcode, Instructions } from './code.js'
@@ -299,6 +300,9 @@ export class Compiler {
         return err
       }
       this.emit(Opcode.OpReturnValue)
+    } else if (node instanceof CallExpression) {
+      this.compile(node.function)
+      this.emit(Opcode.OpCall)
     }
 
     return null
