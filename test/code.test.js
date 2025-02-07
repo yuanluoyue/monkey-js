@@ -18,6 +18,11 @@ function testMake() {
       operands: [],
       expected: [Opcode.OpAdd],
     },
+    {
+      op: Opcode.OpGetLocal,
+      operands: [255],
+      expected: [Opcode.OpGetLocal, 255],
+    },
   ]
 
   for (let tt of tests) {
@@ -43,13 +48,15 @@ function testMake() {
 function testInstructionsString() {
   const instructions = [
     make(Opcode.OpAdd),
+    make(Opcode.OpGetLocal, 1),
     make(Opcode.OpConstant, 2),
     make(Opcode.OpConstant, 65535),
   ]
 
   const expected = `0000 OpAdd
-0001 OpConstant 2
-0004 OpConstant 65535
+0001 OpGetLocal 1
+0003 OpConstant 2
+0006 OpConstant 65535
 `
 
   let concatted = []
@@ -71,6 +78,11 @@ function testReadOperands() {
       op: Opcode.OpConstant,
       operands: [65535],
       bytesRead: 2,
+    },
+    {
+      op: Opcode.OpGetLocal,
+      operands: [255],
+      bytesRead: 1,
     },
   ]
 

@@ -23,6 +23,8 @@ export const Opcode = {
   OpCall: 21,
   OpReturnValue: 22,
   OpReturn: 23,
+  OpGetLocal: 24,
+  OpSetLocal: 25,
 }
 
 class Definition {
@@ -103,6 +105,8 @@ const definitions = {
   [Opcode.OpCall]: new Definition('OpCall', []),
   [Opcode.OpReturnValue]: new Definition('OpReturnValue', []),
   [Opcode.OpReturn]: new Definition('OpReturn', []),
+  [Opcode.OpGetLocal]: new Definition('OpGetLocal', [1]),
+  [Opcode.OpSetLocal]: new Definition('OpSetLocal', [1]),
 }
 
 export function lookup(op) {
@@ -121,6 +125,9 @@ export function readOperands(def, ins) {
   for (let i = 0; i < def.operandWidths.length; i++) {
     const width = def.operandWidths[i]
     switch (width) {
+      case 1:
+        operands[i] = readUint8(ins.slice(offset))
+        break
       case 2:
         operands[i] = readUint16(ins.slice(offset))
         break
@@ -129,6 +136,10 @@ export function readOperands(def, ins) {
   }
 
   return { operands, offset }
+}
+
+function readUint8(ins) {
+  return ins[0]
 }
 
 // 读取 16 位无符号整数的函数
@@ -161,6 +172,9 @@ export function make(op, ...operands) {
     let o = operands[i]
     let width = def.operandWidths[i]
     switch (width) {
+      case 1:
+        instruction[offset] = o
+        break
       case 2:
         // 对于 2 字节的操作数，使用 DataView 进行大端序存储
         let view = new DataView(new ArrayBuffer(2))
