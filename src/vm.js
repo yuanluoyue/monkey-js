@@ -6,13 +6,16 @@ import {
   MonkeyString,
   MonkeyArray,
   MonkeyHash,
+  CompiledFunction,
 } from './object.js'
 import { Opcode, readUint16 } from './code.js'
+import { Frame } from './frame.js'
 
 const singleTrue = new MonkeyBoolean(true)
 const singleFalse = new MonkeyBoolean(false)
 const singleNull = new MonkeyNull()
 
+const MaxFrames = 1024
 const GlobalsSize = 65536
 const StackSize = 2048
 
@@ -31,12 +34,35 @@ function isTruthy(obj) {
 
 export class VM {
   constructor(bytecode, globals) {
+    const mainFn = new CompiledFunction(bytecode.instructions)
+    const mainFrame = new Frame(mainFn)
+
+    const frames = new Array(MaxFrames)
+    frames[0] = mainFrame
+
     this.constants = bytecode.constants
-    this.instructions = bytecode.instructions
+    // this.instructions = bytecode.instructions
 
     this.stack = new Array(StackSize).fill(null)
     this.globals = globals || new Array(GlobalsSize).fill(null)
     this.sp = 0
+
+    this.frames = frames
+    this.framesIndex = 1
+  }
+
+  currentFrame() {
+    return this.frames[this.framesIndex - 1]
+  }
+
+  pushFrame(f) {
+    this.frames[this.framesIndex] = f
+    this.framesIndex++
+  }
+
+  popFrame() {
+    this.framesIndex--
+    return this.frames[this.framesIndex]
   }
 
   stackTop() {
@@ -260,12 +286,24 @@ export class VM {
   }
 
   run() {
-    for (let ip = 0; ip < this.instructions.length; ip++) {
-      const op = this.instructions[ip]
+    let ip = 0
+    let ins
+    let op
+
+    while (
+      this.currentFrame().ip <
+      this.currentFrame().instructions().length - 1
+    ) {
+      this.currentFrame().ip++
+
+      ip = this.currentFrame().ip
+      ins = this.currentFrame().instructions()
+      op = ins[ip]
+
       switch (op) {
         case Opcode.OpConstant:
-          const constIndex = readUint16(this.instructions.slice(ip + 1))
-          ip += 2
+          const constIndex = readUint16(ins.slice(ip + 1))
+          this.currentFrame().ip += 2
           this.push(this.constants[constIndex])
           break
 
@@ -317,18 +355,18 @@ export class VM {
         }
 
         case Opcode.OpJump: {
-          const pos = readUint16(this.instructions.slice(ip + 1))
-          ip = pos - 1
+          const pos = readUint16(ins.slice(ip + 1))
+          this.currentFrame().ip = pos - 1
           break
         }
 
         case Opcode.OpJumpNotTruthy: {
-          const pos = readUint16(this.instructions.slice(ip + 1))
-          ip += 2
+          const pos = readUint16(ins.slice(ip + 1))
+          this.currentFrame().ip += 2
 
           const condition = this.pop()
           if (!isTruthy(condition)) {
-            ip = pos - 1
+            this.currentFrame().ip = pos - 1
           }
           break
         }
@@ -338,15 +376,15 @@ export class VM {
           break
 
         case Opcode.OpSetGlobal: {
-          const globalIndex = readUint16(this.instructions.slice(ip + 1))
-          ip += 2
+          const globalIndex = readUint16(ins.slice(ip + 1))
+          this.currentFrame().ip += 2
           this.globals[globalIndex] = this.pop()
           break
         }
 
         case Opcode.OpGetGlobal: {
-          const globalIndex = readUint16(this.instructions.slice(ip + 1))
-          ip += 2
+          const globalIndex = readUint16(ins.slice(ip + 1))
+          this.currentFrame().ip += 2
           const err = this.push(this.globals[globalIndex])
           if (err) {
             return err
@@ -355,8 +393,8 @@ export class VM {
         }
 
         case Opcode.OpArray: {
-          const numElements = readUint16(this.instructions.slice(ip + 1))
-          ip += 2
+          const numElements = readUint16(ins.slice(ip + 1))
+          this.currentFrame().ip += 2
 
           const array = this.buildArray(this.sp - numElements, this.sp)
           this.sp = this.sp - numElements
@@ -369,8 +407,8 @@ export class VM {
         }
 
         case Opcode.OpHash: {
-          const numElements = readUint16(this.instructions.slice(ip + 1))
-          ip += 2
+          const numElements = readUint16(ins.slice(ip + 1))
+          this.currentFrame().ip += 2
 
           const hash = this.buildHash(this.sp - numElements, this.sp)
 
@@ -388,6 +426,40 @@ export class VM {
           const left = this.pop()
 
           const err = this.executeIndexExpression(left, index)
+          if (err) {
+            return err
+          }
+          break
+        }
+
+        case Opcode.OpCall: {
+          const fn = this.stack[this.sp - 1]
+          if (!(fn instanceof CompiledFunction)) {
+            throw new Error('calling non - function')
+          }
+          const frame = new Frame(fn)
+          this.pushFrame(frame)
+          break
+        }
+
+        case Opcode.OpReturnValue: {
+          const returnValue = this.pop()
+
+          this.popFrame()
+          this.pop()
+
+          const err = this.push(returnValue)
+          if (err) {
+            return err
+          }
+          break
+        }
+
+        case Opcode.OpReturn: {
+          this.popFrame()
+          this.pop()
+
+          const err = this.push(singleNull)
           if (err) {
             return err
           }

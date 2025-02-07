@@ -130,7 +130,7 @@ export const testInfixExpression = (expression, left, operator, right) => {
 
 export const testIntegerObject = (obj, expected) => {
   if (!(obj instanceof MonkeyInteger)) {
-    console.log(obj, expected)
+    // console.log(obj?.instructions?.toString(), expected)
     throw new Error(`object is not Integer. got=${typeof obj} (${obj})`)
   }
   if (obj.value !== expected) {
