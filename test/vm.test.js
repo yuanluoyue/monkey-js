@@ -311,6 +311,21 @@ function testFunctionsWithoutReturnValue() {
   runVmTests(tests)
 }
 
+function testFirstClassFunctions() {
+  const tests = [
+    {
+      input: `
+      let returnsOne = fn() { 1; };
+      let returnsOneReturner = fn() { returnsOne; };
+      returnsOneReturner()();
+      `,
+      expected: 1,
+    },
+  ]
+
+  runVmTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
@@ -323,6 +338,7 @@ function main() {
   testCallingFunctionsWithoutArguments()
   testFunctionsWithReturnStatement()
   testFunctionsWithoutReturnValue()
+  testFirstClassFunctions()
 }
 
 main()
