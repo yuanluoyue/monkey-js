@@ -1,5 +1,6 @@
 export const SymbolScope = {
   GLOBAL: 'GLOBAL',
+  LOCAL: 'LOCAL',
 }
 
 export class MonkeySymbol {
@@ -11,7 +12,8 @@ export class MonkeySymbol {
 }
 
 export class SymbolTable {
-  constructor() {
+  constructor(outer) {
+    this.outer = outer
     this.store = {}
     this.numDefinitions = 0
   }
@@ -19,7 +21,7 @@ export class SymbolTable {
   define(name) {
     const symbol = new MonkeySymbol(
       name,
-      SymbolScope.GLOBAL,
+      this.outer === undefined ? SymbolScope.GLOBAL : SymbolScope.LOCAL,
       this.numDefinitions
     )
     this.store[name] = symbol
@@ -28,7 +30,10 @@ export class SymbolTable {
   }
 
   resolve(name) {
-    const symbol = this.store[name]
+    let symbol = this.store[name]
+    if (!symbol && this.outer !== undefined) {
+      symbol = this.outer.resolve(name)
+    }
     return symbol
   }
 }

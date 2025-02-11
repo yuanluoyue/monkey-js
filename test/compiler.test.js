@@ -563,6 +563,8 @@ function testCompilerScopes() {
     console.error(`scopeIndex wrong. got=${compiler.scopeIndex}, want=0`)
   }
 
+  const globalSymbolTable = compiler.symbolTable
+
   compiler.emit(Opcode.OpMul)
 
   compiler.enterScope()
@@ -587,9 +589,21 @@ function testCompilerScopes() {
     )
   }
 
+  if (compiler.symbolTable.outer !== globalSymbolTable) {
+    console.error('compiler did not enclose symbolTable')
+  }
+
   compiler.leaveScope()
   if (compiler.scopeIndex !== 0) {
     console.error(`scopeIndex wrong. got=${compiler.scopeIndex}, want=0`)
+  }
+
+  if (compiler.symbolTable !== globalSymbolTable) {
+    console.error('compiler did not restore global symbol table')
+  }
+
+  if (compiler.symbolTable.outer) {
+    console.error('compiler modified global symbol table incorrectly')
   }
 
   compiler.emit(Opcode.OpAdd)
@@ -653,6 +667,71 @@ function testFunctionCalls() {
   runCompilerTests(tests)
 }
 
+function testLetStatementScopes() {
+  const tests = [
+    {
+      input: `
+          let num = 55;
+          fn() { num }
+          `,
+      expectedConstants: [
+        55,
+        [make(Opcode.OpGetGlobal, 0), make(Opcode.OpReturnValue)],
+      ],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpSetGlobal, 0),
+        make(Opcode.OpConstant, 1),
+        make(Opcode.OpPop),
+      ],
+    },
+    {
+      input: `
+          fn() {
+              let num = 55;
+              num
+          }
+          `,
+      expectedConstants: [
+        55,
+        [
+          make(Opcode.OpConstant, 0),
+          make(Opcode.OpSetLocal, 0),
+          make(Opcode.OpGetLocal, 0),
+          make(Opcode.OpReturnValue),
+        ],
+      ],
+      expectedInstructions: [make(Opcode.OpConstant, 1), make(Opcode.OpPop)],
+    },
+    {
+      input: `
+          fn() {
+              let a = 55;
+              let b = 77;
+              a + b
+          }
+          `,
+      expectedConstants: [
+        55,
+        77,
+        [
+          make(Opcode.OpConstant, 0),
+          make(Opcode.OpSetLocal, 0),
+          make(Opcode.OpConstant, 1),
+          make(Opcode.OpSetLocal, 1),
+          make(Opcode.OpGetLocal, 0),
+          make(Opcode.OpGetLocal, 1),
+          make(Opcode.OpAdd),
+          make(Opcode.OpReturnValue),
+        ],
+      ],
+      expectedInstructions: [make(Opcode.OpConstant, 2), make(Opcode.OpPop)],
+    },
+  ]
+
+  runCompilerTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
@@ -665,6 +744,7 @@ function main() {
   testFunctions()
   testCompilerScopes()
   testFunctionCalls()
+  testLetStatementScopes()
 }
 
 main()

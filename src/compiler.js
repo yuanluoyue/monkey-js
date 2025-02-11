@@ -19,7 +19,7 @@ import {
 } from '../src/ast.js'
 import { MonkeyInteger, MonkeyString, CompiledFunction } from '../src/object.js'
 import { make, Opcode, Instructions } from './code.js'
-import { SymbolTable } from './symbolTable.js'
+import { SymbolTable, SymbolScope } from './symbolTable.js'
 
 class Bytecode {
   constructor(instructions, constants) {
@@ -67,12 +67,17 @@ export class Compiler {
     const scope = new CompilationScope()
     this.scopes.push(scope)
     this.scopeIndex++
+
+    this.symbolTable = new SymbolTable(this.symbolTable)
   }
 
   leaveScope() {
     const instructions = this.currentInstructions()
     this.scopes = this.scopes.slice(0, this.scopes.length - 1)
     this.scopeIndex--
+
+    this.symbolTable = this.symbolTable.outer
+
     return instructions
   }
 
@@ -206,7 +211,11 @@ export class Compiler {
 
       const symbol = this.symbolTable.define(node.name.value)
 
-      this.emit(Opcode.OpSetGlobal, symbol.index)
+      if (symbol.scope === SymbolScope.GLOBAL) {
+        this.emit(Opcode.OpSetGlobal, symbol.index)
+      } else {
+        this.emit(Opcode.OpSetLocal, symbol.index)
+      }
     } else if (node instanceof Identifier) {
       const symbol = this.symbolTable.resolve(node.value)
 
@@ -214,7 +223,11 @@ export class Compiler {
         console.error(`undefined variable ${node.value}`)
       }
 
-      this.emit(Opcode.OpGetGlobal, symbol.index)
+      if (symbol.scope === SymbolScope.GLOBAL) {
+        this.emit(Opcode.OpGetGlobal, symbol.index)
+      } else {
+        this.emit(Opcode.OpGetLocal, symbol.index)
+      }
     } else if (node instanceof IntegerLiteral) {
       // 处理整数字面量
       const integer = new MonkeyInteger(node.value)
