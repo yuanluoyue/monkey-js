@@ -433,6 +433,7 @@ export class VM {
         }
 
         case Opcode.OpCall: {
+          this.currentFrame().ip += 1
           const fn = this.stack[this.sp - 1]
           if (!(fn instanceof CompiledFunction)) {
             throw new Error('calling non - function')

@@ -102,7 +102,7 @@ const definitions = {
   [Opcode.OpArray]: new Definition('OpArray', [2]),
   [Opcode.OpHash]: new Definition('OpHash', [2]),
   [Opcode.OpIndex]: new Definition('OpIndex', []),
-  [Opcode.OpCall]: new Definition('OpCall', []),
+  [Opcode.OpCall]: new Definition('OpCall', [1]),
   [Opcode.OpReturnValue]: new Definition('OpReturnValue', []),
   [Opcode.OpReturn]: new Definition('OpReturn', []),
   [Opcode.OpGetLocal]: new Definition('OpGetLocal', [1]),

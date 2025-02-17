@@ -316,7 +316,10 @@ export class Compiler {
       this.emit(Opcode.OpReturnValue)
     } else if (node instanceof CallExpression) {
       this.compile(node.function)
-      this.emit(Opcode.OpCall)
+      for (const arg of node.arguments) {
+        this.compile(arg)
+      }
+      this.emit(Opcode.OpCall, node.arguments.length)
     }
 
     return null
