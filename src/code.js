@@ -138,7 +138,7 @@ export function readOperands(def, ins) {
   return { operands, offset }
 }
 
-function readUint8(ins) {
+export function readUint8(ins) {
   return ins[0]
 }
 

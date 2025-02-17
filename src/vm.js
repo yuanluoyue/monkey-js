@@ -8,7 +8,7 @@ import {
   MonkeyHash,
   CompiledFunction,
 } from './object.js'
-import { Opcode, readUint16 } from './code.js'
+import { Opcode, readUint16, readUint8 } from './code.js'
 import { Frame } from './frame.js'
 
 const singleTrue = new MonkeyBoolean(true)
@@ -35,7 +35,7 @@ function isTruthy(obj) {
 export class VM {
   constructor(bytecode, globals) {
     const mainFn = new CompiledFunction(bytecode.instructions)
-    const mainFrame = new Frame(mainFn)
+    const mainFrame = new Frame(mainFn, 0)
 
     const frames = new Array(MaxFrames)
     frames[0] = mainFrame
@@ -437,17 +437,19 @@ export class VM {
           if (!(fn instanceof CompiledFunction)) {
             throw new Error('calling non - function')
           }
-          const frame = new Frame(fn)
+          const frame = new Frame(fn, this.sp)
           this.pushFrame(frame)
+          this.sp = frame.basePointer + fn.numLocals
           break
         }
 
         case Opcode.OpReturnValue: {
           const returnValue = this.pop()
 
-          this.popFrame()
-          this.pop()
+          const frame = this.popFrame()
+          this.sp = frame.basePointer - 1
 
+          // this.pop()
           const err = this.push(returnValue)
           if (err) {
             return err
@@ -456,10 +458,31 @@ export class VM {
         }
 
         case Opcode.OpReturn: {
-          this.popFrame()
-          this.pop()
+          const frame = this.popFrame()
+          this.sp = frame.basePointer - 1
+          // this.pop()
 
           const err = this.push(singleNull)
+          if (err) {
+            return err
+          }
+          break
+        }
+
+        case Opcode.OpSetLocal: {
+          const localIndex = readUint8(ins.slice(ip + 1))
+          this.currentFrame().ip += 1
+          const frame = this.currentFrame()
+          this.stack[frame.basePointer + localIndex] = this.pop()
+          break
+        }
+
+        case Opcode.OpGetLocal: {
+          const localIndex = readUint8(ins.slice(ip + 1))
+          this.currentFrame().ip += 1
+          const frame = this.currentFrame()
+          const value = this.stack[frame.basePointer + localIndex]
+          const err = this.push(value)
           if (err) {
             return err
           }

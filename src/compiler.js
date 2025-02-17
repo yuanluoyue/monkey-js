@@ -302,8 +302,9 @@ export class Compiler {
         this.emit(Opcode.OpReturn)
       }
 
+      const numLocals = this.symbolTable.numDefinitions
       const instructions = this.leaveScope()
-      const compiledFn = new CompiledFunction(instructions)
+      const compiledFn = new CompiledFunction(instructions, numLocals)
       const constantIndex = this.addConstant(compiledFn)
 
       this.emit(Opcode.OpConstant, constantIndex)
