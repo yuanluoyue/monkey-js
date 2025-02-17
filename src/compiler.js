@@ -289,6 +289,11 @@ export class Compiler {
       this.emit(Opcode.OpIndex)
     } else if (node instanceof FunctionLiteral) {
       this.enterScope()
+
+      for (const p of node.parameters) {
+        this.symbolTable.define(p.value)
+      }
+
       const err = this.compile(node.body)
       if (err) {
         return err
