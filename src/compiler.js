@@ -20,6 +20,7 @@ import {
 import { MonkeyInteger, MonkeyString, CompiledFunction } from '../src/object.js'
 import { make, Opcode, Instructions } from './code.js'
 import { SymbolTable, SymbolScope } from './symbolTable.js'
+import { builtins } from './builtins.js'
 
 class Bytecode {
   constructor(instructions, constants) {
@@ -54,6 +55,10 @@ export class Compiler {
 
     this.symbolTable = symbolTable || new SymbolTable()
 
+    builtins.forEach((builtin, i) => {
+      this.symbolTable.defineBuiltin(builtin.name, i)
+    })
+
     const mainScope = new CompilationScope()
     this.scopes = [mainScope]
     this.scopeIndex = 0
@@ -79,6 +84,22 @@ export class Compiler {
     this.symbolTable = this.symbolTable.outer
 
     return instructions
+  }
+
+  loadSymbol(s) {
+    switch (s.scope) {
+      case SymbolScope.GLOBAL:
+        this.emit(Opcode.OpGetGlobal, s.index)
+        break
+      case SymbolScope.LOCAL:
+        this.emit(Opcode.OpGetLocal, s.index)
+        break
+      case SymbolScope.BUILTIN:
+        this.emit(Opcode.OpGetBuiltin, s.index)
+        break
+      default:
+        throw new Error(`Unsupported scope: ${s.scope}`)
+    }
   }
 
   compile(node) {
@@ -223,11 +244,7 @@ export class Compiler {
         console.error(`undefined variable ${node.value}`)
       }
 
-      if (symbol.scope === SymbolScope.GLOBAL) {
-        this.emit(Opcode.OpGetGlobal, symbol.index)
-      } else {
-        this.emit(Opcode.OpGetLocal, symbol.index)
-      }
+      this.loadSymbol(symbol)
     } else if (node instanceof IntegerLiteral) {
       // 处理整数字面量
       const integer = new MonkeyInteger(node.value)

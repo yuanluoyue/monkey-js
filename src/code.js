@@ -25,6 +25,7 @@ export const Opcode = {
   OpReturn: 23,
   OpGetLocal: 24,
   OpSetLocal: 25,
+  OpGetBuiltin: 26,
 }
 
 class Definition {
@@ -107,6 +108,7 @@ const definitions = {
   [Opcode.OpReturn]: new Definition('OpReturn', []),
   [Opcode.OpGetLocal]: new Definition('OpGetLocal', [1]),
   [Opcode.OpSetLocal]: new Definition('OpSetLocal', [1]),
+  [Opcode.OpGetBuiltin]: new Definition('OpGetBuiltin', [1]),
 }
 
 export function lookup(op) {

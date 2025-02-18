@@ -7,7 +7,7 @@ import {
   MonkeyObjectType,
 } from './object.js'
 
-const builtins = [
+export const builtins = [
   {
     name: 'len',
     builtin: new MonkeyBuiltin((...args) => {
@@ -26,6 +26,15 @@ const builtins = [
           'argument to `len` not supported, got ' + args[0].type()
         )
       }
+    }),
+  },
+  {
+    name: 'puts',
+    builtin: new MonkeyBuiltin((...args) => {
+      for (let arg of args) {
+        console.log(arg.inspect())
+      }
+      return null
     }),
   },
   {
@@ -125,15 +134,6 @@ const builtins = [
       newElements.push(args[1])
 
       return new MonkeyArray(newElements)
-    }),
-  },
-  {
-    name: 'puts',
-    builtin: new MonkeyBuiltin((...args) => {
-      for (let arg of args) {
-        console.log(arg.inspect())
-      }
-      return null
     }),
   },
 ]

@@ -181,11 +181,51 @@ function testResolveNestedLocal() {
   }
 }
 
+function testDefineResolveBuiltins() {
+  const global = new SymbolTable()
+  const firstLocal = new SymbolTable(global)
+  const secondLocal = new SymbolTable(firstLocal)
+
+  const expected = [
+    new MonkeySymbol('a', SymbolScope.BUILTIN, 0),
+    new MonkeySymbol('c', SymbolScope.BUILTIN, 1),
+    new MonkeySymbol('e', SymbolScope.BUILTIN, 2),
+    new MonkeySymbol('f', SymbolScope.BUILTIN, 3),
+  ]
+
+  expected.forEach((sym, i) => {
+    global.defineBuiltin(sym.name, i)
+  })
+
+  const tables = [global, firstLocal, secondLocal]
+  tables.forEach((table) => {
+    expected.forEach((sym) => {
+      const result = table.resolve(sym.name)
+      if (!result) {
+        console.error(`name ${sym.name} not resolvable`)
+        return
+      }
+      if (
+        result.name !== sym.name ||
+        result.scope !== sym.scope ||
+        result.index !== sym.index
+      ) {
+        console.error(
+          `expected ${sym.name} to resolve to ${JSON.stringify(
+            sym
+          )}, got=${JSON.stringify(result)}`
+        )
+      }
+    })
+  })
+}
+
 function main() {
   testDefine()
   testResolveGlobal()
   testResolveLocal()
   testResolveNestedLocal()
+  testDefineResolveBuiltins()
 }
 
 main()

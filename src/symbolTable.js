@@ -1,6 +1,7 @@
 export const SymbolScope = {
   GLOBAL: 'GLOBAL',
   LOCAL: 'LOCAL',
+  BUILTIN: 'BUILTIN',
 }
 
 export class MonkeySymbol {
@@ -26,6 +27,12 @@ export class SymbolTable {
     )
     this.store[name] = symbol
     this.numDefinitions++
+    return symbol
+  }
+
+  defineBuiltin(name, index) {
+    const symbol = new MonkeySymbol(name, SymbolScope.BUILTIN, index)
+    this.store[name] = symbol
     return symbol
   }
 
