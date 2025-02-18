@@ -6,10 +6,12 @@ import {
   MonkeyString,
   MonkeyArray,
   MonkeyHash,
+  MonkeyBuiltin,
   CompiledFunction,
 } from './object.js'
 import { Opcode, readUint16, readUint8 } from './code.js'
 import { Frame } from './frame.js'
+import { builtins } from './builtins.js'
 
 const singleTrue = new MonkeyBoolean(true)
 const singleFalse = new MonkeyBoolean(false)
@@ -285,13 +287,7 @@ export class VM {
     return this.push(pair)
   }
 
-  callFunction(numArgs) {
-    const fnIndex = this.sp - 1 - numArgs
-    const fn = this.stack[fnIndex]
-    if (!(fn instanceof CompiledFunction)) {
-      return new Error('calling non-function')
-    }
-
+  callFunction(fn, numArgs) {
     if (numArgs !== fn.numParameters) {
       return new Error(
         `wrong number of arguments: want=${fn.numParameters}, got=${numArgs}`
@@ -300,10 +296,34 @@ export class VM {
 
     const frame = new Frame(fn, this.sp - numArgs)
     this.pushFrame(frame)
-
     this.sp = frame.basePointer + fn.numLocals
 
     return null
+  }
+
+  callBuiltin(builtin, numArgs) {
+    const args = this.stack.slice(this.sp - numArgs, this.sp)
+    const result = builtin.fn(...args)
+    this.sp = this.sp - numArgs - 1
+
+    if (result) {
+      this.push(result)
+    } else {
+      this.push(singleNull)
+    }
+
+    return null
+  }
+
+  executeCall(numArgs) {
+    const callee = this.stack[this.sp - 1 - numArgs]
+    if (callee instanceof CompiledFunction) {
+      return this.callFunction(callee, numArgs)
+    } else if (callee instanceof MonkeyBuiltin) {
+      return this.callBuiltin(callee, numArgs)
+    } else {
+      return new Error('calling non - function and non - built - in')
+    }
   }
 
   run() {
@@ -457,7 +477,7 @@ export class VM {
           const numArgs = readUint8(ins.slice(ip + 1))
           this.currentFrame().ip += 1
 
-          const err = this.callFunction(numArgs)
+          const err = this.executeCall(numArgs)
           if (err) {
             return err
           }
@@ -504,6 +524,17 @@ export class VM {
           const frame = this.currentFrame()
           const value = this.stack[frame.basePointer + localIndex]
           const err = this.push(value)
+          if (err) {
+            return err
+          }
+          break
+        }
+
+        case Opcode.OpGetBuiltin: {
+          const builtinIndex = readUint8(ins.slice(ip + 1))
+          this.currentFrame().ip += 1
+          const definition = builtins[builtinIndex]
+          const err = this.push(definition.builtin)
           if (err) {
             return err
           }

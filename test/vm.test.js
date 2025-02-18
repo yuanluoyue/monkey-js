@@ -1,5 +1,5 @@
 import { Compiler } from '../src/compiler.js'
-import { MonkeyInteger } from '../src/object.js'
+import { MonkeyInteger, MonkeyError } from '../src/object.js'
 import { VM } from '../src/vm.js'
 
 import {
@@ -24,7 +24,19 @@ function testExpectedObject(expected, actual) {
   } else if (Array.isArray(expected)) {
     testArrayObject(actual, expected)
   } else if (typeof expected === 'object' && expected !== null) {
-    testHashObject(actual, expected)
+    if (expected instanceof MonkeyError) {
+      if (!(actual instanceof MonkeyError)) {
+        console.error(`object is not Error: ${actual}`)
+        return
+      }
+      if (actual.message !== expected.message) {
+        console.error(
+          `wrong error message. expected="${expected.message}", got="${actual.message}"`
+        )
+      }
+    } else {
+      testHashObject(actual, expected)
+    }
   }
 }
 
@@ -498,6 +510,52 @@ function testCallingFunctionsWithWrongArguments() {
   }
 }
 
+function testBuiltinFunctions() {
+  const tests = [
+    { input: `len("")`, expected: 0 },
+    { input: `len("four")`, expected: 4 },
+    { input: `len("hello world")`, expected: 11 },
+    {
+      input: `len(1)`,
+      expected: new MonkeyError('argument to `len` not supported, got INTEGER'),
+    },
+    {
+      input: `len("one", "two")`,
+      expected: new MonkeyError('wrong number of arguments. got=2, want=1'),
+    },
+    { input: `len([1, 2, 3])`, expected: 3 },
+    { input: `len([])`, expected: 0 },
+    { input: `puts("hello", "world!")`, expected: null },
+    { input: `first([1, 2, 3])`, expected: 1 },
+    { input: `first([])`, expected: null },
+    {
+      input: `first(1)`,
+      expected: new MonkeyError(
+        'argument to `first` must be ARRAY, got INTEGER'
+      ),
+    },
+    { input: `last([1, 2, 3])`, expected: 3 },
+    { input: `last([])`, expected: null },
+    {
+      input: `last(1)`,
+      expected: new MonkeyError(
+        'argument to `last` must be ARRAY, got INTEGER'
+      ),
+    },
+    { input: `rest([1, 2, 3])`, expected: [2, 3] },
+    { input: `rest([])`, expected: null },
+    { input: `push([], 1)`, expected: [1] },
+    {
+      input: `push(1, 1)`,
+      expected: new MonkeyError(
+        'argument to `push` must be ARRAY, got INTEGER'
+      ),
+    },
+  ]
+
+  runVmTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
@@ -514,6 +572,7 @@ function main() {
   testCallingFunctionsWithBindings()
   testCallingFunctionsWithArgumentsAndBindings()
   testCallingFunctionsWithWrongArguments()
+  testBuiltinFunctions()
 }
 
 main()

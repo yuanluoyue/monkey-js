@@ -4,6 +4,7 @@ import { Parser } from './parser.js'
 import { Compiler } from '../src/compiler.js'
 import { VM } from '../src/vm.js'
 import { SymbolTable } from '../src/symbolTable.js'
+import { builtins } from './builtins.js'
 import { evalMonkey, newEnvironment } from './evaluator.js'
 import { defineMacros, expandMacros } from '../src/marco.js'
 
@@ -39,9 +40,13 @@ export const startRepl = (
     prompt: PROMPT,
   })
 
-  let constants = []
-  let globals = new Array(65536).fill(null)
-  let symbolTable = new SymbolTable()
+  const constants = []
+  const globals = new Array(65536).fill(null)
+  const symbolTable = new SymbolTable()
+
+  builtins.forEach((builtin, i) => {
+    symbolTable.defineBuiltin(builtin.name, i)
+  })
 
   rl.prompt()
 
