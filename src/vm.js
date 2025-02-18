@@ -285,6 +285,27 @@ export class VM {
     return this.push(pair)
   }
 
+  callFunction(numArgs) {
+    const fnIndex = this.sp - 1 - numArgs
+    const fn = this.stack[fnIndex]
+    if (!(fn instanceof CompiledFunction)) {
+      return new Error('calling non-function')
+    }
+
+    if (numArgs !== fn.numParameters) {
+      return new Error(
+        `wrong number of arguments: want=${fn.numParameters}, got=${numArgs}`
+      )
+    }
+
+    const frame = new Frame(fn, this.sp - numArgs)
+    this.pushFrame(frame)
+
+    this.sp = frame.basePointer + fn.numLocals
+
+    return null
+  }
+
   run() {
     let ip = 0
     let ins
@@ -433,14 +454,13 @@ export class VM {
         }
 
         case Opcode.OpCall: {
+          const numArgs = readUint8(ins.slice(ip + 1))
           this.currentFrame().ip += 1
-          const fn = this.stack[this.sp - 1]
-          if (!(fn instanceof CompiledFunction)) {
-            throw new Error('calling non - function')
+
+          const err = this.callFunction(numArgs)
+          if (err) {
+            return err
           }
-          const frame = new Frame(fn, this.sp)
-          this.pushFrame(frame)
-          this.sp = frame.basePointer + fn.numLocals
           break
         }
 

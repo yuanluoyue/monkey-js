@@ -387,6 +387,117 @@ function testCallingFunctionsWithBindings() {
   runVmTests(tests)
 }
 
+function testCallingFunctionsWithArgumentsAndBindings() {
+  const tests = [
+    {
+      input: `
+        let identity = fn(a) { a; };
+        identity(4);
+      `,
+      expected: 4,
+    },
+    {
+      input: `
+        let sum = fn(a, b) { a + b; };
+        sum(1, 2);
+      `,
+      expected: 3,
+    },
+    {
+      input: `
+        let sum = fn(a, b) {
+            let c = a + b;
+            c;
+        };
+        sum(1, 2);
+      `,
+      expected: 3,
+    },
+    {
+      input: `
+        let sum = fn(a, b) {
+            let c = a + b;
+            c;
+        };
+        sum(1, 2) + sum(3, 4);`,
+      expected: 10,
+    },
+    {
+      input: `
+        let sum = fn(a, b) {
+            let c = a + b;
+            c;
+        };
+        let outer = fn() {
+            sum(1, 2) + sum(3, 4);
+        };
+        outer();
+        `,
+      expected: 10,
+    },
+    {
+      input: `
+        let globalNum = 10;
+
+        let sum = fn(a, b) {
+            let c = a + b;
+            c + globalNum;
+        };
+
+        let outer = fn() {
+            sum(1, 2) + sum(3, 4) + globalNum;
+        };
+
+        outer() + globalNum;
+        `,
+      expected: 50,
+    },
+  ]
+
+  runVmTests(tests)
+}
+
+function testCallingFunctionsWithWrongArguments() {
+  const tests = [
+    {
+      input: 'fn() { 1; }(1);',
+      expected: 'wrong number of arguments: want=0, got=1',
+    },
+    {
+      input: 'fn(a) { a; }();',
+      expected: 'wrong number of arguments: want=1, got=0',
+    },
+    {
+      input: 'fn(a, b) { a + b; }(1);',
+      expected: 'wrong number of arguments: want=2, got=1',
+    },
+  ]
+
+  for (const test of tests) {
+    const program = parse(test.input)
+    const compiler = new Compiler()
+    const compileErr = compiler.compile(program)
+    if (compileErr) {
+      console.error(`compiler error: ${compileErr}`)
+      return
+    }
+
+    const vm = new VM(compiler.bytecode())
+    const runErr = vm.run()
+    if (!runErr) {
+      console.error('expected VM error but resulted in none.')
+      return
+    }
+
+    if (runErr.message !== test.expected) {
+      console.error(
+        `wrong VM error: want="${test.expected}", got="${runErr.message}"`
+      )
+      return
+    }
+  }
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
@@ -401,6 +512,8 @@ function main() {
   testFunctionsWithoutReturnValue()
   testFirstClassFunctions()
   testCallingFunctionsWithBindings()
+  testCallingFunctionsWithArgumentsAndBindings()
+  testCallingFunctionsWithWrongArguments()
 }
 
 main()

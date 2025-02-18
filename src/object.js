@@ -266,9 +266,10 @@ export class Macro {
 }
 
 export class CompiledFunction {
-  constructor(instructions, numLocals) {
+  constructor(instructions, numLocals, numParameters) {
     this.instructions = instructions
     this.numLocals = numLocals
+    this.numParameters = numParameters
   }
 
   type() {
