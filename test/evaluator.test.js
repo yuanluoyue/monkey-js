@@ -309,6 +309,26 @@ function testBuiltinFunctions() {
       input: 'len("one", "two")',
       expected: 'wrong number of arguments. got=2, want=1',
     },
+    {
+      input: 'len([1,2,3])',
+      expected: 3,
+    },
+    {
+      input: 'first([1,2,3])',
+      expected: 1,
+    },
+    {
+      input: 'last([1,2,3])',
+      expected: 3,
+    },
+    {
+      input: 'first(rest([1,2,3]))',
+      expected: 2,
+    },
+    {
+      input: 'len(push([1,2,3], 1))',
+      expected: 4,
+    },
   ]
 
   for (const tt of tests) {
