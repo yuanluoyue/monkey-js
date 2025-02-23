@@ -8,6 +8,7 @@ import {
   MonkeyHash,
   MonkeyBuiltin,
   CompiledFunction,
+  Closure,
 } from './object.js'
 import { Opcode, readUint16, readUint8 } from './code.js'
 import { Frame } from './frame.js'
@@ -37,7 +38,8 @@ function isTruthy(obj) {
 export class VM {
   constructor(bytecode, globals) {
     const mainFn = new CompiledFunction(bytecode.instructions)
-    const mainFrame = new Frame(mainFn, 0)
+    const mainClosure = new Closure(mainFn)
+    const mainFrame = new Frame(mainClosure, 0)
 
     const frames = new Array(MaxFrames)
     frames[0] = mainFrame
@@ -315,15 +317,40 @@ export class VM {
     return null
   }
 
+  callClosure(cl, numArgs) {
+    if (numArgs !== cl.fn.numParameters) {
+      return new Error(
+        `wrong number of arguments: want=${cl.fn.numParameters}, got=${numArgs}`
+      )
+    }
+
+    const frame = new Frame(cl, this.sp - numArgs)
+    this.pushFrame(frame)
+
+    this.sp = frame.basePointer + cl.fn.numLocals
+
+    return null
+  }
+
   executeCall(numArgs) {
     const callee = this.stack[this.sp - 1 - numArgs]
-    if (callee instanceof CompiledFunction) {
-      return this.callFunction(callee, numArgs)
+    if (callee instanceof Closure) {
+      return this.callClosure(callee, numArgs)
     } else if (callee instanceof MonkeyBuiltin) {
       return this.callBuiltin(callee, numArgs)
     } else {
       return new Error('calling non - function and non - built - in')
     }
+  }
+
+  pushClosure(constIndex) {
+    const constant = this.constants[constIndex]
+    if (!(constant instanceof CompiledFunction)) {
+      return new Error(`not a function: ${JSON.stringify(constant)}`)
+    }
+
+    const closure = new Closure(constant)
+    return this.push(closure)
   }
 
   run() {
@@ -535,6 +562,18 @@ export class VM {
           this.currentFrame().ip += 1
           const definition = builtins[builtinIndex]
           const err = this.push(definition.builtin)
+          if (err) {
+            return err
+          }
+          break
+        }
+
+        case Opcode.OpClosure: {
+          const constIndex = readUint16(ins.slice(ip + 1))
+          readUint8(ins.slice(ip + 3))
+          this.currentFrame().ip += 3
+
+          const err = this.pushClosure(constIndex)
           if (err) {
             return err
           }

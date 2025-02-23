@@ -12,6 +12,7 @@ export const MonkeyObjectType = {
   QUOTE: 'QUOTE',
   MACRO: 'MACRO',
   COMPILED_FUNCTION_OBJ: 'COMPILED_FUNCTION_OBJ',
+  CLOSURE_OBJ: 'CLOSURE',
 }
 
 export class MonkeyInteger {
@@ -278,5 +279,20 @@ export class CompiledFunction {
 
   inspect() {
     return `CompiledFunction[${this.instructions.toString()}]`
+  }
+}
+
+export class Closure {
+  constructor(fn, free) {
+    this.fn = fn
+    this.free = free
+  }
+
+  type() {
+    return MonkeyObjectType.CLOSURE_OBJ
+  }
+
+  inspect() {
+    return `Closure[${JSON.stringify(this)}]`
   }
 }

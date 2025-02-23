@@ -333,7 +333,7 @@ export class Compiler {
       )
       const constantIndex = this.addConstant(compiledFn)
 
-      this.emit(Opcode.OpConstant, constantIndex)
+      this.emit(Opcode.OpClosure, constantIndex, 0)
     } else if (node instanceof ReturnStatement) {
       const err = this.compile(node.returnValue)
       if (err) {

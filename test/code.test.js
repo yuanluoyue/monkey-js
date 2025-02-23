@@ -23,6 +23,11 @@ function testMake() {
       operands: [255],
       expected: [Opcode.OpGetLocal, 255],
     },
+    {
+      op: Opcode.OpClosure,
+      operands: [65534, 255],
+      expected: [Opcode.OpClosure, 255, 254, 255],
+    },
   ]
 
   for (let tt of tests) {
@@ -51,12 +56,14 @@ function testInstructionsString() {
     make(Opcode.OpGetLocal, 1),
     make(Opcode.OpConstant, 2),
     make(Opcode.OpConstant, 65535),
+    make(Opcode.OpClosure, 65535, 255),
   ]
 
   const expected = `0000 OpAdd
 0001 OpGetLocal 1
 0003 OpConstant 2
 0006 OpConstant 65535
+0009 OpClosure 65535 255
 `
 
   let concatted = []
@@ -83,6 +90,11 @@ function testReadOperands() {
       op: Opcode.OpGetLocal,
       operands: [255],
       bytesRead: 1,
+    },
+    {
+      op: Opcode.OpClosure,
+      operands: [65535, 255],
+      bytesRead: 3,
     },
   ]
 

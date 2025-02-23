@@ -26,6 +26,7 @@ export const Opcode = {
   OpGetLocal: 24,
   OpSetLocal: 25,
   OpGetBuiltin: 26,
+  OpClosure: 27,
 }
 
 class Definition {
@@ -54,6 +55,8 @@ export class Instructions extends Array {
         return def.name
       case 1:
         return `${def.name} ${operands[0]}`
+      case 2:
+        return `${def.name} ${operands[0]} ${operands[1]}`
       default:
         return `ERROR: unhandled operandCount for ${def.name}\n`
     }
@@ -109,6 +112,7 @@ const definitions = {
   [Opcode.OpGetLocal]: new Definition('OpGetLocal', [1]),
   [Opcode.OpSetLocal]: new Definition('OpSetLocal', [1]),
   [Opcode.OpGetBuiltin]: new Definition('OpGetBuiltin', [1]),
+  [Opcode.OpClosure]: new Definition('OpClosure', [2, 1]),
 }
 
 export function lookup(op) {

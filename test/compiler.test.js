@@ -516,7 +516,7 @@ function testFunctions() {
           make(Opcode.OpReturnValue),
         ],
       ],
-      expectedInstructions: [make(Opcode.OpConstant, 2), make(Opcode.OpPop)],
+      expectedInstructions: [make(Opcode.OpClosure, 2, 0), make(Opcode.OpPop)],
     },
     {
       input: 'fn() { 5 + 10 }',
@@ -530,7 +530,7 @@ function testFunctions() {
           make(Opcode.OpReturnValue),
         ],
       ],
-      expectedInstructions: [make(Opcode.OpConstant, 2), make(Opcode.OpPop)],
+      expectedInstructions: [make(Opcode.OpClosure, 2, 0), make(Opcode.OpPop)],
     },
     {
       input: 'fn() { 1; 2 }',
@@ -544,12 +544,12 @@ function testFunctions() {
           make(Opcode.OpReturnValue),
         ],
       ],
-      expectedInstructions: [make(Opcode.OpConstant, 2), make(Opcode.OpPop)],
+      expectedInstructions: [make(Opcode.OpClosure, 2, 0), make(Opcode.OpPop)],
     },
     {
       input: 'fn() { }',
       expectedConstants: [[make(Opcode.OpReturn)]],
-      expectedInstructions: [make(Opcode.OpConstant, 0), make(Opcode.OpPop)],
+      expectedInstructions: [make(Opcode.OpClosure, 0, 0), make(Opcode.OpPop)],
     },
   ]
 
@@ -640,7 +640,7 @@ function testFunctionCalls() {
         [make(Opcode.OpConstant, 0), make(Opcode.OpReturnValue)],
       ],
       expectedInstructions: [
-        make(Opcode.OpConstant, 1),
+        make(Opcode.OpClosure, 1, 0),
         make(Opcode.OpCall, 0),
         make(Opcode.OpPop),
       ],
@@ -655,7 +655,7 @@ function testFunctionCalls() {
         [make(Opcode.OpConstant, 0), make(Opcode.OpReturnValue)],
       ],
       expectedInstructions: [
-        make(Opcode.OpConstant, 1),
+        make(Opcode.OpClosure, 1, 0),
         make(Opcode.OpSetGlobal, 0),
         make(Opcode.OpGetGlobal, 0),
         make(Opcode.OpCall, 0),
@@ -672,7 +672,7 @@ function testFunctionCalls() {
         24,
       ],
       expectedInstructions: [
-        make(Opcode.OpConstant, 0),
+        make(Opcode.OpClosure, 0, 0),
         make(Opcode.OpSetGlobal, 0),
         make(Opcode.OpGetGlobal, 0),
         make(Opcode.OpConstant, 1),
@@ -699,7 +699,7 @@ function testFunctionCalls() {
         26,
       ],
       expectedInstructions: [
-        make(Opcode.OpConstant, 0),
+        make(Opcode.OpClosure, 0, 0),
         make(Opcode.OpSetGlobal, 0),
         make(Opcode.OpGetGlobal, 0),
         make(Opcode.OpConstant, 1),
@@ -728,7 +728,7 @@ function testLetStatementScopes() {
       expectedInstructions: [
         make(Opcode.OpConstant, 0),
         make(Opcode.OpSetGlobal, 0),
-        make(Opcode.OpConstant, 1),
+        make(Opcode.OpClosure, 1, 0),
         make(Opcode.OpPop),
       ],
     },
@@ -748,7 +748,7 @@ function testLetStatementScopes() {
           make(Opcode.OpReturnValue),
         ],
       ],
-      expectedInstructions: [make(Opcode.OpConstant, 1), make(Opcode.OpPop)],
+      expectedInstructions: [make(Opcode.OpClosure, 1, 0), make(Opcode.OpPop)],
     },
     {
       input: `
@@ -772,7 +772,7 @@ function testLetStatementScopes() {
           make(Opcode.OpReturnValue),
         ],
       ],
-      expectedInstructions: [make(Opcode.OpConstant, 2), make(Opcode.OpPop)],
+      expectedInstructions: [make(Opcode.OpClosure, 2, 0), make(Opcode.OpPop)],
     },
   ]
 
@@ -809,7 +809,7 @@ function testBuiltins() {
           make(Opcode.OpReturnValue),
         ],
       ],
-      expectedInstructions: [make(Opcode.OpConstant, 0), make(Opcode.OpPop)],
+      expectedInstructions: [make(Opcode.OpClosure, 0, 0), make(Opcode.OpPop)],
     },
   ]
 
