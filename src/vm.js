@@ -343,13 +343,20 @@ export class VM {
     }
   }
 
-  pushClosure(constIndex) {
+  pushClosure(constIndex, numFree) {
     const constant = this.constants[constIndex]
     if (!(constant instanceof CompiledFunction)) {
       return new Error(`not a function: ${JSON.stringify(constant)}`)
     }
 
-    const closure = new Closure(constant)
+    const free = []
+    for (let i = 0; i < numFree; i++) {
+      free[i] = this.stack[this.sp - numFree + i]
+    }
+
+    this.sp = this.sp - numFree
+
+    const closure = new Closure(constant, free)
     return this.push(closure)
   }
 
@@ -570,10 +577,22 @@ export class VM {
 
         case Opcode.OpClosure: {
           const constIndex = readUint16(ins.slice(ip + 1))
-          readUint8(ins.slice(ip + 3))
+          const numFree = readUint8(ins.slice(ip + 3))
           this.currentFrame().ip += 3
 
-          const err = this.pushClosure(constIndex)
+          const err = this.pushClosure(constIndex, numFree)
+          if (err) {
+            return err
+          }
+          break
+        }
+
+        case Opcode.OpGetFree: {
+          const freeIndex = readUint8(ins.slice(ip + 1))
+          this.currentFrame().ip += 1
+
+          const currentClosure = this.currentFrame().cl
+          const err = this.push(currentClosure.free[freeIndex])
           if (err) {
             return err
           }
