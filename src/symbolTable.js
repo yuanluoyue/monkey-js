@@ -2,6 +2,7 @@ export const SymbolScope = {
   GLOBAL: 'GLOBAL',
   LOCAL: 'LOCAL',
   BUILTIN: 'BUILTIN',
+  FREE: 'FREE',
 }
 
 export class MonkeySymbol {
@@ -17,6 +18,7 @@ export class SymbolTable {
     this.outer = outer
     this.store = {}
     this.numDefinitions = 0
+    this.freeSymbols = []
   }
 
   define(name) {
@@ -36,10 +38,33 @@ export class SymbolTable {
     return symbol
   }
 
+  defineFree(original) {
+    this.freeSymbols.push(original)
+
+    const symbol = new MonkeySymbol(
+      original.name,
+      SymbolScope.FREE,
+      this.freeSymbols.length - 1
+    )
+
+    this.store[original.name] = symbol
+    return symbol
+  }
+
   resolve(name) {
     let symbol = this.store[name]
     if (!symbol && this.outer !== undefined) {
       symbol = this.outer.resolve(name)
+
+      if (
+        symbol.scope === SymbolScope.GLOBAL ||
+        symbol.scope === SymbolScope.BUILTIN
+      ) {
+        return symbol
+      }
+
+      const free = this.defineFree(symbol)
+      return free
     }
     return symbol
   }

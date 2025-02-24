@@ -816,6 +816,127 @@ function testBuiltins() {
   runCompilerTests(tests)
 }
 
+function testClosures() {
+  const tests = [
+    {
+      input: `
+          fn(a) {
+              fn(b) {
+                  a+b
+              }
+          }
+          `,
+      expectedConstants: [
+        [
+          make(Opcode.OpGetFree, 0),
+          make(Opcode.OpGetLocal, 0),
+          make(Opcode.OpAdd),
+          make(Opcode.OpReturnValue),
+        ],
+        [
+          make(Opcode.OpGetLocal, 0),
+          make(Opcode.OpClosure, 0, 1),
+          make(Opcode.OpReturnValue),
+        ],
+      ],
+      expectedInstructions: [make(Opcode.OpClosure, 1, 0), make(Opcode.OpPop)],
+    },
+    {
+      input: `
+      fn(a) {
+          fn(b) {
+              fn(c) {
+                  a + b + c
+              }
+          }
+      };
+      `,
+      expectedConstants: [
+        [
+          make(Opcode.OpGetFree, 0),
+          make(Opcode.OpGetFree, 1),
+          make(Opcode.OpAdd),
+          make(Opcode.OpGetLocal, 0),
+          make(Opcode.OpAdd),
+          make(Opcode.OpReturnValue),
+        ],
+        [
+          make(Opcode.OpGetFree, 0),
+          make(Opcode.OpGetLocal, 0),
+          make(Opcode.OpClosure, 0, 2),
+          make(Opcode.OpReturnValue),
+        ],
+        [
+          make(Opcode.OpGetLocal, 0),
+          make(Opcode.OpClosure, 1, 1),
+          make(Opcode.OpReturnValue),
+        ],
+      ],
+      expectedInstructions: [make(Opcode.OpClosure, 2, 0), make(Opcode.OpPop)],
+    },
+    {
+      input: `
+      let global = 55;
+
+      fn() {
+          let a = 66;
+
+          fn() {
+              let b = 77;
+
+              fn() {
+                  let c = 88;
+
+                  global + a + b + c;
+              }
+          }
+      }
+      `,
+      expectedConstants: [
+        55,
+        66,
+        77,
+        88,
+        [
+          make(Opcode.OpConstant, 3),
+          make(Opcode.OpSetLocal, 0),
+          make(Opcode.OpGetGlobal, 0),
+          make(Opcode.OpGetFree, 0),
+          make(Opcode.OpAdd),
+          make(Opcode.OpGetFree, 1),
+          make(Opcode.OpAdd),
+          make(Opcode.OpGetLocal, 0),
+          make(Opcode.OpAdd),
+          make(Opcode.OpReturnValue),
+        ],
+        [
+          make(Opcode.OpConstant, 2),
+          make(Opcode.OpSetLocal, 0),
+          make(Opcode.OpGetFree, 0),
+          make(Opcode.OpGetLocal, 0),
+          make(Opcode.OpClosure, 4, 2),
+          make(Opcode.OpReturnValue),
+        ],
+        [
+          make(Opcode.OpConstant, 1),
+          make(Opcode.OpSetLocal, 0),
+          make(Opcode.OpGetLocal, 0),
+          make(Opcode.OpClosure, 5, 1),
+          make(Opcode.OpReturnValue),
+        ],
+      ],
+      expectedInstructions: [
+        make(Opcode.OpConstant, 0),
+        make(Opcode.OpSetGlobal, 0),
+        make(Opcode.OpClosure, 6, 0),
+        make(Opcode.OpPop),
+      ],
+    },
+  ]
+
+  runCompilerTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
@@ -830,6 +951,7 @@ function main() {
   testFunctionCalls()
   testLetStatementScopes()
   testBuiltins()
+  testClosures()
 }
 
 main()

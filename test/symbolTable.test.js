@@ -220,12 +220,102 @@ function testDefineResolveBuiltins() {
   })
 }
 
+function testResolveFree() {
+  // 创建全局符号表并定义符号
+  const global = new SymbolTable()
+  global.define('a')
+  global.define('b')
+
+  // 创建第一个局部符号表并定义符号
+  const firstLocal = new SymbolTable(global)
+  firstLocal.define('c')
+  firstLocal.define('d')
+
+  // 创建第二个局部符号表并定义符号
+  const secondLocal = new SymbolTable(firstLocal)
+  secondLocal.define('e')
+  secondLocal.define('f')
+
+  const tests = [
+    {
+      table: firstLocal,
+      expectedSymbols: [
+        { name: 'a', scope: SymbolScope.GLOBAL, index: 0 },
+        { name: 'b', scope: SymbolScope.GLOBAL, index: 1 },
+        { name: 'c', scope: SymbolScope.LOCAL, index: 0 },
+        { name: 'd', scope: SymbolScope.LOCAL, index: 1 },
+      ],
+      expectedFreeSymbols: [],
+    },
+    {
+      table: secondLocal,
+      expectedSymbols: [
+        { name: 'a', scope: SymbolScope.GLOBAL, index: 0 },
+        { name: 'b', scope: SymbolScope.GLOBAL, index: 1 },
+        { name: 'c', scope: SymbolScope.FREE, index: 0 },
+        { name: 'd', scope: SymbolScope.FREE, index: 1 },
+        { name: 'e', scope: SymbolScope.LOCAL, index: 0 },
+        { name: 'f', scope: SymbolScope.LOCAL, index: 1 },
+      ],
+      expectedFreeSymbols: [
+        { name: 'c', scope: SymbolScope.LOCAL, index: 0 },
+        { name: 'd', scope: SymbolScope.LOCAL, index: 1 },
+      ],
+    },
+  ]
+
+  for (const test of tests) {
+    for (const sym of test.expectedSymbols) {
+      const result = test.table.resolve(sym.name)
+      if (!result) {
+        console.error(`name ${sym.name} not resolvable`)
+        continue
+      }
+      if (
+        result.name !== sym.name ||
+        result.scope !== sym.scope ||
+        result.index !== sym.index
+      ) {
+        console.error(
+          `expected ${sym.name} to resolve to ${JSON.stringify(
+            sym
+          )}, got=${JSON.stringify(result)}`
+        )
+      }
+    }
+
+    if (test.table.freeSymbols.length !== test.expectedFreeSymbols.length) {
+      console.error(
+        `wrong number of free symbols. got=${test.table.freeSymbols.length}, want=${test.expectedFreeSymbols.length}`
+      )
+      continue
+    }
+
+    for (let i = 0; i < test.expectedFreeSymbols.length; i++) {
+      const result = test.table.freeSymbols[i]
+      const sym = test.expectedFreeSymbols[i]
+      if (
+        result.name !== sym.name ||
+        result.scope !== sym.scope ||
+        result.index !== sym.index
+      ) {
+        console.error(
+          `wrong free symbol. got=${JSON.stringify(
+            result
+          )}, want=${JSON.stringify(sym)}`
+        )
+      }
+    }
+  }
+}
+
 function main() {
   testDefine()
   testResolveGlobal()
   testResolveLocal()
   testResolveNestedLocal()
   testDefineResolveBuiltins()
+  testResolveFree()
 }
 
 main()

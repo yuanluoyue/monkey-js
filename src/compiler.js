@@ -97,6 +97,9 @@ export class Compiler {
       case SymbolScope.BUILTIN:
         this.emit(Opcode.OpGetBuiltin, s.index)
         break
+      case SymbolScope.FREE:
+        this.emit(Opcode.OpGetFree, s.index)
+        break
       default:
         throw new Error(`Unsupported scope: ${s.scope}`)
     }
@@ -324,8 +327,14 @@ export class Compiler {
         this.emit(Opcode.OpReturn)
       }
 
+      const freeSymbols = this.symbolTable.freeSymbols
       const numLocals = this.symbolTable.numDefinitions
       const instructions = this.leaveScope()
+
+      for (const s of freeSymbols) {
+        this.loadSymbol(s)
+      }
+
       const compiledFn = new CompiledFunction(
         instructions,
         numLocals,
@@ -333,7 +342,7 @@ export class Compiler {
       )
       const constantIndex = this.addConstant(compiledFn)
 
-      this.emit(Opcode.OpClosure, constantIndex, 0)
+      this.emit(Opcode.OpClosure, constantIndex, freeSymbols.length)
     } else if (node instanceof ReturnStatement) {
       const err = this.compile(node.returnValue)
       if (err) {
