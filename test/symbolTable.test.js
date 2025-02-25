@@ -309,6 +309,55 @@ function testResolveFree() {
   }
 }
 
+function testDefineAndResolveFunctionName() {
+  const global = new SymbolTable()
+  global.defineFunctionName('a')
+
+  const expected = new MonkeySymbol('a', SymbolScope.FUNCTION, 0)
+
+  const result = global.resolve(expected.name)
+  if (!result) {
+    throw new Error(`function name ${expected.name} not resolvable`)
+  }
+
+  if (
+    result.name !== expected.name ||
+    result.scope !== expected.scope ||
+    result.index !== expected.index
+  ) {
+    throw new Error(
+      `expected ${expected.name} to resolve to ${JSON.stringify(
+        expected
+      )}, got=${JSON.stringify(result)}`
+    )
+  }
+}
+
+function testShadowingFunctionName() {
+  const global = new SymbolTable()
+  global.defineFunctionName('a')
+  global.define('a')
+
+  const expected = new MonkeySymbol('a', SymbolScope.GLOBAL, 0)
+
+  const result = global.resolve(expected.name)
+  if (!result) {
+    throw new Error(`function name ${expected.name} not resolvable`)
+  }
+
+  if (
+    result.name !== expected.name ||
+    result.scope !== expected.scope ||
+    result.index !== expected.index
+  ) {
+    throw new Error(
+      `expected ${expected.name} to resolve to ${JSON.stringify(
+        expected
+      )}, got=${JSON.stringify(result)}`
+    )
+  }
+}
+
 function main() {
   testDefine()
   testResolveGlobal()
@@ -316,6 +365,8 @@ function main() {
   testResolveNestedLocal()
   testDefineResolveBuiltins()
   testResolveFree()
+  testDefineAndResolveFunctionName()
+  testShadowingFunctionName()
 }
 
 main()

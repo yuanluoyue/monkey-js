@@ -936,6 +936,46 @@ function testMacroLiteralParsing() {
   testInfixExpression(bodyStmt.expression, 'x', '+', 'y')
 }
 
+function testFunctionLiteralWithName() {
+  const input = `let myFunction = fn() { };`
+
+  const lexer = new Lexer(input)
+  const parser = new Parser(lexer)
+  const program = parser.parseProgram()
+
+  checkParserErrors(parser)
+
+  // 检查程序语句数量是否符合预期
+  if (program.statements.length !== 1) {
+    throw new Error(
+      `program.statements does not contain 1 statement. got=${program.statements.length}`
+    )
+  }
+
+  const stmt = program.statements[0]
+  // 检查第一个语句是否为 LetStatement 类型
+  if (stmt.constructor.name !== 'LetStatement') {
+    throw new Error(
+      `program.statements[0] is not LetStatement. got=${stmt.constructor.name}`
+    )
+  }
+
+  const functionLiteral = stmt.value
+  // 检查语句的值是否为 FunctionLiteral 类型
+  if (functionLiteral.constructor.name !== 'FunctionLiteral') {
+    throw new Error(
+      `stmt.value is not FunctionLiteral. got=${functionLiteral.constructor.name}`
+    )
+  }
+
+  // 检查函数名是否符合预期
+  if (functionLiteral.name !== 'myFunction') {
+    throw new Error(
+      `function literal name wrong. want 'myFunction', got=${functionLiteral.name}`
+    )
+  }
+}
+
 const main = () => {
   testLetStatements()
   testReturnStatements()
@@ -957,6 +997,7 @@ const main = () => {
   testParsingEmptyHashLiteral()
   testParsingHashLiteralsWithExpressions()
   testMacroLiteralParsing()
+  testFunctionLiteralWithName()
 }
 
 main()

@@ -148,10 +148,11 @@ export class BooleanLiteral {
 }
 
 export class FunctionLiteral {
-  constructor(token, parameters, body) {
+  constructor(token, parameters, body, name) {
     this.token = token
     this.parameters = parameters
     this.body = body
+    this.name = name
   }
 
   tokenLiteral() {
@@ -161,6 +162,9 @@ export class FunctionLiteral {
   getString() {
     const params = this.parameters.map((p) => p.getString())
     let out = ''
+    if (this.name !== '') {
+      out += `<${this.name}>`
+    }
     out += this.tokenLiteral()
     out += '('
     out += params.join(', ')

@@ -599,6 +599,15 @@ export class VM {
           break
         }
 
+        case Opcode.OpCurrentClosure: {
+          const currentClosure = this.currentFrame().cl
+          const err = this.push(currentClosure)
+          if (err) {
+            return err
+          }
+          break
+        }
+
         // default:
         //   return new Error(`未知操作码: ${op}`)
       }

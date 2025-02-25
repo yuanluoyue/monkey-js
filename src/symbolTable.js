@@ -3,6 +3,7 @@ export const SymbolScope = {
   LOCAL: 'LOCAL',
   BUILTIN: 'BUILTIN',
   FREE: 'FREE',
+  FUNCTION: 'FUNCTION',
 }
 
 export class MonkeySymbol {
@@ -48,6 +49,12 @@ export class SymbolTable {
     )
 
     this.store[original.name] = symbol
+    return symbol
+  }
+
+  defineFunctionName(name) {
+    const symbol = new MonkeySymbol(name, SymbolScope.FUNCTION, 0)
+    this.store[name] = symbol
     return symbol
   }
 

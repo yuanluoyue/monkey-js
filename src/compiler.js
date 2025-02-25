@@ -100,6 +100,9 @@ export class Compiler {
       case SymbolScope.FREE:
         this.emit(Opcode.OpGetFree, s.index)
         break
+      case SymbolScope.FUNCTION:
+        this.emit(Opcode.OpCurrentClosure)
+        break
       default:
         throw new Error(`Unsupported scope: ${s.scope}`)
     }
@@ -228,12 +231,12 @@ export class Compiler {
         }
       }
     } else if (node instanceof LetStatement) {
+      const symbol = this.symbolTable.define(node.name.value)
+
       const err = this.compile(node.value)
       if (err) {
         return err
       }
-
-      const symbol = this.symbolTable.define(node.name.value)
 
       if (symbol.scope === SymbolScope.GLOBAL) {
         this.emit(Opcode.OpSetGlobal, symbol.index)
@@ -309,6 +312,10 @@ export class Compiler {
       this.emit(Opcode.OpIndex)
     } else if (node instanceof FunctionLiteral) {
       this.enterScope()
+
+      if (node.name !== '') {
+        this.symbolTable.defineFunctionName(node.name)
+      }
 
       for (const p of node.parameters) {
         this.symbolTable.define(p.value)

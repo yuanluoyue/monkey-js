@@ -1,5 +1,5 @@
 import { Compiler } from '../src/compiler.js'
-import { MonkeyInteger, MonkeyError } from '../src/object.js'
+import { MonkeyInteger, MonkeyError, CompiledFunction } from '../src/object.js'
 import { VM } from '../src/vm.js'
 
 import {
@@ -45,6 +45,7 @@ function runVmTests(tests) {
     const program = parse(tt.input)
 
     const comp = new Compiler()
+
     const compileErr = comp.compile(program)
     if (compileErr) {
       console.error(`compiler error: ${compileErr}`)
@@ -55,6 +56,23 @@ function runVmTests(tests) {
     const runErr = vm.run()
     if (runErr) {
       console.error(`vm error: ${runErr}`)
+
+      const bytecode = comp.bytecode()
+      const constants = bytecode.constants
+      for (let i = 0; i < constants.length; i++) {
+        const constant = constants[i]
+        console.log(
+          `CONSTANT ${i} ${constant.inspect()} (${constant.constructor.name}):`
+        )
+
+        if (constant instanceof CompiledFunction) {
+          console.log(` Instructions:`)
+          console.log(constant.instructions.toString())
+        } else if (constant instanceof MonkeyInteger) {
+          console.log(` Value: ${constant.value}`)
+        }
+      }
+
       return
     }
 
@@ -656,6 +674,58 @@ function testClosures() {
   runVmTests(tests)
 }
 
+function testRecursiveFunctions() {
+  const tests = [
+    {
+      input: `
+      let countDown = fn(x) {
+          if (x == 0) {
+              return 0;
+          } else {
+              countDown(x - 1);
+          }
+      };
+      countDown(1);
+      `,
+      expected: 0,
+    },
+    {
+      input: `
+  let countDown = fn(x) {
+      if (x == 0) {
+          return 0;
+      } else {
+          countDown(x - 1);
+      }
+  };
+  let wrapper = fn() {
+      countDown(1);
+  };
+  wrapper();
+  `,
+      expected: 0,
+    },
+    {
+      input: `
+  let wrapper = fn() {
+      let countDown = fn(x) {
+          if (x == 0) {
+              return 0;
+          } else {
+              countDown(x - 1);
+          }
+      };
+      countDown(1);
+  };
+  wrapper();
+  `,
+      expected: 0,
+    },
+  ]
+
+  runVmTests(tests)
+}
+
 function main() {
   testIntegerArithmetic()
   testBooleanExpressions()
@@ -674,6 +744,7 @@ function main() {
   testCallingFunctionsWithWrongArguments()
   testBuiltinFunctions()
   testClosures()
+  testRecursiveFunctions()
 }
 
 main()

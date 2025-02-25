@@ -28,6 +28,7 @@ export const Opcode = {
   OpGetBuiltin: 26,
   OpClosure: 27,
   OpGetFree: 28,
+  OpCurrentClosure: 29,
 }
 
 class Definition {
@@ -115,6 +116,7 @@ const definitions = {
   [Opcode.OpGetBuiltin]: new Definition('OpGetBuiltin', [1]),
   [Opcode.OpClosure]: new Definition('OpClosure', [2, 1]),
   [Opcode.OpGetFree]: new Definition('OpGetFree', [1]),
+  [Opcode.OpCurrentClosure]: new Definition('OpCurrentClosure', []),
 }
 
 export function lookup(op) {
